@@ -5,6 +5,7 @@ import { GrAddCircle } from "react-icons/gr";
 import { RiDeleteBinLine } from "react-icons/ri";
 import productsService from "../services/products.service";
 import ordersService from "../services/orders.service";
+import employeeService from "../services/employees.service";
 import { useSelector } from "react-redux";
 import { propsToClassKey } from "@mui/styles";
 import EditOrderForm from "./EditOrderForm";
@@ -256,7 +257,6 @@ const DetailsButton = styled.button`
     box-shadow: 0 3px #999;
     font-family: 'Roboto',serif;
     text-align: center;
-    margin-left: 1rem;
 
     &:hover{
         background-color: #a7d0cd;
@@ -286,7 +286,6 @@ const DetailsButtonCancel = styled.button`
     box-shadow: 0 3px #999;
     font-family: 'Roboto',serif;
     text-align: center;
-    margin-left: 1rem;
 
     &:hover{
         background-color: #a7d0cd;
@@ -323,36 +322,97 @@ const ModalContent = styled.div`
     overflow-y: auto;
 `;
 
+const ClientSelectContainer = styled.div`
+    margin: 1rem 0;
+    padding: 1rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
+`;
+
+const ClientLabel = styled.label`
+    color: white;
+    font-family: 'Roboto';
+    font-size: 1.2rem;
+    display: block;
+    margin-bottom: 0.5rem;
+`;
+
+const ClientSelect = styled.input`
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 1rem;
+    border: 1px solid #a4d4cc;
+    border-radius: 4px;
+    background-color: white;
+    font-family: 'Roboto';
+
+    &:focus {
+        outline: none;
+        border-color: #7cb9b0;
+    }
+`;
+
+const ErrorMessage = styled.div`
+    color: #ff6b6b;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    text-align: center;
+`;
+
 const ModifyForm = ({ onCancel, orderId, orderDetails, totalPrice }) => {
     const [closeOrderForm, setCloseOrderForm] = useState(false);
     const [isEditFormVisible, setIsEditFormVisible] = useState(false);
     const [formVisible, setFormVisible] = useState(true);
+    const [clients, setClients] = useState([]);
+    const [selectedClientId, setSelectedClientId] = useState("");
+    const [error, setError] = useState("");
 
+    useEffect(() => {
+        employeeService.getAllClients()
+            .then((response) => {
+                setClients(response.data);
+            })
+            .catch((error) => {
+                console.error("Error al cargar clientes:", error);
+                setError("Error al cargar la lista de clientes");
+            });
+    }, []);
 
     const handleCloseOrderDetails = () => {
         setCloseOrderForm(true);
+        setError("");
     }
 
 const handleCloseDetails = () => {
     setCloseOrderForm(false);
+    setSelectedClientId("");
+    setError("");
 }
 
 const handleCloseOrder = () => {
-    const orderID = {
-        orderId: orderId
-    }
+    setError("");
 
-    ordersService.closeOrder(orderID)
+    const closeOrderData = {
+        orderId: orderId,
+        clientId: selectedClientId ? parseInt(selectedClientId) : null
+    };
+
+    ordersService.closeOrderWithClient(closeOrderData)
         .then(response => {
-          console.log("Orden cerrada con éxito:", response.data);
-          onCancel();
+            console.log("Orden cerrada exitosamente:", response.data);
+            setCloseOrderForm(false);
+            onCancel();
         })
         .catch(error => {
-          console.error("Error al cerrar la orden:", error);
+            console.error("Error al cerrar la orden:", error);
+            if (error.response && error.response.data && error.response.data.message) {
+                setError(error.response.data.message);
+            } else {
+                setError("Error al cerrar la orden. Inténtalo de nuevo.");
+            }
         });
-
-    setCloseOrderForm(false);
-    onCancel();
 }
 
     const handleAddProductsOrder = () => {
@@ -398,7 +458,39 @@ const handleCloseOrder = () => {
                            </div>
                        ))}
                     <strong2 style={{ color: "white" }}>Total price: ${totalPrice}</strong2>
-                    <div style={{ display: "flex", justifyContent: "speace-between" }}>
+                    
+                    <ClientSelectContainer>
+                        <ClientLabel htmlFor="clientId">Assign Client (Optional):</ClientLabel>
+                        <ClientSelect
+                            id="clientId"
+                            list="clientsList"
+                            value={selectedClientId}
+                            onChange={(e) => setSelectedClientId(e.target.value)}
+                            placeholder="Type client ID or select..."
+                        />
+                        <datalist id="clientsList">
+                            {clients
+                                .filter(client => 
+                                    !selectedClientId || 
+                                    client.clientId.toString().startsWith(selectedClientId)
+                                )
+                                .map((client) => (
+                                    <option key={client.clientId} value={client.clientId}>
+                                        {client.username} (ID: {client.clientId})
+                                    </option>
+                                ))
+                            }
+                        </datalist>
+                        {selectedClientId && clients.find(c => c.clientId.toString() === selectedClientId) && (
+                            <div style={{ color: "white", fontSize: "0.9rem", marginTop: "0.5rem" }}>
+                                Selected client: {clients.find(c => c.clientId.toString() === selectedClientId)?.username}
+                            </div>
+                        )}
+                    </ClientSelectContainer>
+
+                    {error && <ErrorMessage>{error}</ErrorMessage>}
+
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem" }}>
                    <DetailsButton onClick={() => handleCloseOrder()}>
                        Close Order
                    </DetailsButton>

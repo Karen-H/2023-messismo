@@ -235,9 +235,7 @@ function Orders() {
     setColumnVisible(newColumns);
   }, [matches]);
 
-  useEffect(() => {
-    console.log("holis",selectedOrderDetails);
-  }, [selectedOrderDetails])
+
 
   useEffect(() => {
     ordersService
@@ -245,7 +243,6 @@ function Orders() {
       .then((response) => {
         setOrders(response.data);
         setIsLoading(false);
-        console.log("done");
       })
       .catch((error) => {
         console.error("Error al mostrar las ordenes", error);
@@ -314,17 +311,19 @@ function Orders() {
     setIsLoading(true);
   };
 
-  const rows = orders.map((order) => ({
-    id: order.id,
-    username: order.user.username,
-    clientId: order.clientId,
-    dateCreated: order.dateCreated,
-    totalPrice: order.totalPrice.toLocaleString("en-US", {
-      style: "currency",
-      currency: "USD",
-    }),
-    status: order.status,
-  }));
+  const rows = orders.map((order) => {
+    return {
+      id: order.id,
+      username: order.user.username,
+      clientId: order.clientId,
+      dateCreated: order.dateCreated,
+      totalPrice: order.totalPrice.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
+      }),
+      status: order.status,
+    };
+  });
 
   const columns = [
     {
@@ -474,7 +473,7 @@ function Orders() {
           </Button>
         )}
 
-        <div visible={contentVisible}>
+        <div>
           <Modal open={isOrderFormVisible}>
             <ModalContent>
               {isOrderFormVisible && (

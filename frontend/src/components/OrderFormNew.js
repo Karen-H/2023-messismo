@@ -270,8 +270,6 @@ const OrderFormNew = ({ onCancel }) => {
   };
 
   const orderSubmit = (data) => {
-    console.log("ORDERRRRRR");
-    console.log(data);
     const orderedProducts = formField
       .map((form, index) => {
         const productName = data[`product-${index}`];
@@ -326,7 +324,6 @@ const OrderFormNew = ({ onCancel }) => {
         },
         quantity: product.amount,
       })),
-      clientId: data.clientId || null,
       //totalPrice: totalPrice.toFixed(2),
       //totalCost: totalCost.toFixed(2),
     };
@@ -346,8 +343,6 @@ const OrderFormNew = ({ onCancel }) => {
           setBackendError("Error al enviar la orden");
         }
       });
-
-    console.log(orderData);
   };
 
   const handleCancelClick = () => {
@@ -468,26 +463,6 @@ const OrderFormNew = ({ onCancel }) => {
         })}
 
         <AddIcon onClick={addField} />
-
-        <div className="form-clientid">
-          <Label>Client ID (Optional)</Label>
-          <Input
-            name="clientId"
-            type="number"
-            placeholder="Enter Client ID"
-            {...register("clientId", {
-              min: 1,
-              valueAsNumber: true,
-              onChange: () => setBackendError("")
-            })}
-          />
-          {errors.clientId?.type === "min" && (
-            <small className="fail">Client ID must be a positive number</small>
-          )}
-          {backendError && (
-            <small className="fail">{backendError}</small>
-          )}
-        </div>
 
         <div className="form-totalprice">
           <Label>Total</Label>

@@ -213,7 +213,6 @@ function Users() {
     employeeService
       .getAllClients()
       .then((response) => {
-        console.log("Clients data:", response.data);
         const clients = response.data;
         setAllClients(clients);
       })

@@ -342,7 +342,6 @@ const OrderForm = ({ onCancel }) => {
         },
         quantity: product.amount,
       })),
-      clientId: data.clientId || null,
       //totalPrice: totalPrice.toFixed(2),
       //totalCost: totalCost.toFixed(2),
     };
@@ -362,8 +361,6 @@ const OrderForm = ({ onCancel }) => {
           setBackendError("Error al enviar la orden");
         }
       });
-
-    console.log(orderData);
   };
 
   const handleCancelClick = () => {
@@ -517,26 +514,6 @@ const OrderForm = ({ onCancel }) => {
                     />
                     {errors.paymentmethod?.type === 'required' && <small className="fail">Field is empty</small>}
                 </div> */}
-
-        <div className="form-clientid">
-          <Label>Client ID (Optional)</Label>
-          <Input
-            name="clientId"
-            type="number"
-            placeholder="Enter Client ID"
-            {...register("clientId", {
-              min: 1,
-              valueAsNumber: true,
-              onChange: () => setBackendError("")
-            })}
-          />
-          {errors.clientId?.type === "min" && (
-            <small className="fail">Client ID must be a positive number</small>
-          )}
-          {backendError && (
-            <small className="fail">{backendError}</small>
-          )}
-        </div>
 
         <div className="form-totalprice">
           <Label>Total</Label>

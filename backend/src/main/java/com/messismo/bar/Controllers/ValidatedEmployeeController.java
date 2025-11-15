@@ -86,6 +86,17 @@ public class ValidatedEmployeeController {
         }
     }
 
+    @PostMapping("/closeOrderWithClient")
+    public ResponseEntity<?> closeOrderWithClient(@RequestBody CloseOrderDTO closeOrderDTO) {
+        try {
+            return ResponseEntity.status(HttpStatus.OK).body(orderService.closeOrderWithClient(closeOrderDTO));
+        } catch (OrderNotFoundException | ClientIdNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
     @PostMapping("/modifyOrder")
     public ResponseEntity<?> modifyOrder(@RequestBody ModifyOrderDTO modifyOrderDTO) {
         try {

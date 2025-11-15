@@ -55,6 +55,27 @@ public class OrderService {
         }
     }
 
+    public String closeOrderWithClient(CloseOrderDTO closeOrderDTO) throws Exception {
+        try {
+            Order order = orderRepository.findById(closeOrderDTO.getOrderId()).orElseThrow(() -> new OrderNotFoundException("Order not found"));
+            
+            // Validar clientId si se proporciona
+            if (closeOrderDTO.getClientId() != null) {
+                userRepository.findByClientId(String.valueOf(closeOrderDTO.getClientId()))
+                    .orElseThrow(() -> new ClientIdNotFoundException("Client ID " + closeOrderDTO.getClientId() + " not found"));
+                order.setClientId(closeOrderDTO.getClientId());
+            }
+            
+            order.close();
+            Order savedOrder = orderRepository.save(order);
+            return "Order closed successfully";
+        } catch (OrderNotFoundException | ClientIdNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new Exception("CANNOT close an order at the moment");
+        }
+    }
+
     public String modifyOrder(ModifyOrderDTO modifyOrderDTO) throws Exception {
         try {
             Order order = orderRepository.findById(modifyOrderDTO.getOrderId()).orElseThrow(() -> new OrderNotFoundException("Order not found"));
