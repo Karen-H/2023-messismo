@@ -26,9 +26,11 @@ const validateEmployee = (employeeId) => {
     })
     .then(response => {
         console.log("Empleado validado con éxito:", response.data);
+        return response;
       })
       .catch(error => {
         console.error("Error al validar al empleado:", error);
+        throw error;
       });
   };
   
@@ -40,9 +42,11 @@ const validateAdmin = (employeeId) => {
     'Content-Type' : 'application/json'})
     .then(response => {
         console.log("Administrador validado con éxito:", response.data);
+        return response;
       })
       .catch(error => {
         console.error("Error al validar al administrador:", error);
+        throw error;
       });
 }
 

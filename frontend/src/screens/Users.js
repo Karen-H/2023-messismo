@@ -227,16 +227,22 @@ function Users() {
     setRandomImage(userimages[randomIndex]);
   }, []);
 
-  const handleValidate = (id) => {
-    employeeService.validateEmployee(id);
-    window.location.reload();
-    //dispatch(validateUser(id))
+  const handleValidate = async (id) => {
+    try {
+      await employeeService.validateEmployee(id);
+      window.location.reload();
+    } catch (error) {
+      console.error("Error validating employee:", error);
+    }
   };
 
-  const handleUpgrade = (id) => {
-    //dispatch(upgradeUser(id))
-    employeeService.validateAdmin(id);
-    window.location.reload();
+  const handleUpgrade = async (id) => {
+    try {
+      await employeeService.validateAdmin(id);
+      window.location.reload();
+    } catch (error) {
+      console.error("Error upgrading employee:", error);
+    }
   };
 
   const isAdminOrManager = currentUser && (currentUser.role === "MANAGER" || currentUser.role === "ADMIN");
