@@ -9,14 +9,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegisterRequestDTO {
-
-    private String username;
-
-    private String email;
-
-    private String password;
-    
-    private String userType;
-
+public class ProductClientViewDTO {
+    private String name;
+    private String description;
+    private Double unitPrice;
+    private String category;
 }

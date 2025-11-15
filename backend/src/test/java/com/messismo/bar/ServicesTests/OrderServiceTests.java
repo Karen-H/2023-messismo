@@ -5,6 +5,7 @@ import com.messismo.bar.DTOs.OrderIdDTO;
 import com.messismo.bar.DTOs.OrderRequestDTO;
 import com.messismo.bar.DTOs.ProductOrderDTO;
 import com.messismo.bar.Entities.*;
+import com.messismo.bar.Exceptions.ClientIdNotFoundException;
 import com.messismo.bar.Exceptions.OrderNotFoundException;
 import com.messismo.bar.Exceptions.ProductQuantityBelowAvailableStock;
 import com.messismo.bar.Exceptions.UserNotFoundException;
@@ -83,11 +84,66 @@ public class OrderServiceTests {
         ProductOrderDTO productOrderDTO2 = ProductOrderDTO.builder().product(product2).quantity(3).build();
         productOrders.add(productOrderDTO2);
         OrderRequestDTO orderRequestDTO = OrderRequestDTO.builder().dateCreated(date1)
-                .registeredEmployeeEmail("employee@example.com").productOrders(productOrders).build();
+                .registeredEmployeeEmail("employee@example.com").productOrders(productOrders).clientId(null).build();
 
         when(userRepository.findByEmail("employee@example.com")).thenReturn(Optional.ofNullable(user));
         Assertions.assertEquals(orderService.addNewOrder(orderRequestDTO),
                 "Order created successfully");
+
+    }
+
+    @Test
+    public void testAddNewOrderWithClientId() throws Exception {
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date date1 = dateFormat.parse("2023-08-04 08:10:43");
+        User user = User.builder().username("example").email("employee@example.com").password("password1").id(1L)
+                .role(Role.EMPLOYEE).build();
+        User client = User.builder().username("client").email("client@example.com").password("password1").id(2L)
+                .role(Role.CLIENT).clientId("12345").build();
+        Category category1 = Category.builder().categoryId(1L).name("Entrada").build();
+        Product product1 = Product.builder().productId(1L).name("Empanadas").stock(50).category(category1)
+                .unitPrice(50.00).unitCost(20.00).description("Empanadas de carne").build();
+        Product product2 = Product.builder().productId(2L).name("Ensalada").stock(50).category(category1)
+                .unitPrice(50.00).unitCost(25.00).description("Ensalada de pollo").build();
+        List<ProductOrderDTO> productOrders = new ArrayList<>();
+        ProductOrderDTO productOrderDTO1 = ProductOrderDTO.builder().product(product1).quantity(2).build();
+        productOrders.add(productOrderDTO1);
+        ProductOrderDTO productOrderDTO2 = ProductOrderDTO.builder().product(product2).quantity(3).build();
+        productOrders.add(productOrderDTO2);
+        OrderRequestDTO orderRequestDTO = OrderRequestDTO.builder().dateCreated(date1)
+                .registeredEmployeeEmail("employee@example.com").productOrders(productOrders).clientId(12345L).build();
+
+        when(userRepository.findByEmail("employee@example.com")).thenReturn(Optional.ofNullable(user));
+        when(userRepository.findByClientId("12345")).thenReturn(Optional.ofNullable(client));
+        Assertions.assertEquals(orderService.addNewOrder(orderRequestDTO),
+                "Order created successfully");
+
+    }
+
+    @Test
+    public void testAddNewOrder_ClientIdNotFound() throws Exception {
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date date1 = dateFormat.parse("2023-08-04 08:10:43");
+        User user = User.builder().username("example").email("employee@example.com").password("password1").id(1L)
+                .role(Role.EMPLOYEE).build();
+        Category category1 = Category.builder().categoryId(1L).name("Entrada").build();
+        Product product1 = Product.builder().productId(1L).name("Empanadas").stock(50).category(category1)
+                .unitPrice(50.00).unitCost(20.00).description("Empanadas de carne").build();
+        List<ProductOrderDTO> productOrders = new ArrayList<>();
+        ProductOrderDTO productOrderDTO1 = ProductOrderDTO.builder().product(product1).quantity(2).build();
+        productOrders.add(productOrderDTO1);
+        OrderRequestDTO orderRequestDTO = OrderRequestDTO.builder().dateCreated(date1)
+                .registeredEmployeeEmail("employee@example.com").productOrders(productOrders).clientId(99999L).build();
+
+        when(userRepository.findByEmail("employee@example.com")).thenReturn(Optional.ofNullable(user));
+        when(userRepository.findByClientId("99999")).thenReturn(Optional.empty());
+        
+        ClientIdNotFoundException exception = assertThrows(ClientIdNotFoundException.class, () -> {
+            orderService.addNewOrder(orderRequestDTO);
+        });
+        Assertions.assertEquals("Client ID 99999 not found", exception.getMessage());
 
     }
 
@@ -104,7 +160,7 @@ public class OrderServiceTests {
         productOrders.add(productOrderDTO1);
         ProductOrderDTO productOrderDTO2 = ProductOrderDTO.builder().product(product2).quantity(3).build();
         productOrders.add(productOrderDTO2);
-        OrderRequestDTO orderRequestDTO = OrderRequestDTO.builder().dateCreated(date1).registeredEmployeeEmail("employee@example.com").productOrders(productOrders).build();
+        OrderRequestDTO orderRequestDTO = OrderRequestDTO.builder().dateCreated(date1).registeredEmployeeEmail("employee@example.com").productOrders(productOrders).clientId(null).build();
 
         when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
         UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> {
@@ -128,7 +184,7 @@ public class OrderServiceTests {
         productOrders.add(productOrderDTO1);
         ProductOrderDTO productOrderDTO2 = ProductOrderDTO.builder().product(product2).quantity(3).build();
         productOrders.add(productOrderDTO2);
-        OrderRequestDTO orderRequestDTO = OrderRequestDTO.builder().dateCreated(date1).registeredEmployeeEmail("employee@example.com").productOrders(productOrders).build();
+        OrderRequestDTO orderRequestDTO = OrderRequestDTO.builder().dateCreated(date1).registeredEmployeeEmail("employee@example.com").productOrders(productOrders).clientId(null).build();
 
         when(userRepository.findByEmail("employee@example.com")).thenReturn(Optional.ofNullable(user));
         ProductQuantityBelowAvailableStock exception = assertThrows(ProductQuantityBelowAvailableStock.class, () -> {
@@ -156,7 +212,7 @@ public class OrderServiceTests {
         ProductOrderDTO productOrderDTO2 = ProductOrderDTO.builder().product(product2).quantity(3).build();
         productOrders.add(productOrderDTO2);
         OrderRequestDTO orderRequestDTO = OrderRequestDTO.builder().dateCreated(date1)
-                .registeredEmployeeEmail("employee@example.com").productOrders(productOrders).build();
+                .registeredEmployeeEmail("employee@example.com").productOrders(productOrders).clientId(null).build();
 
         when(userRepository.findByEmail("employee@example.com")).thenReturn(Optional.ofNullable(user));
 

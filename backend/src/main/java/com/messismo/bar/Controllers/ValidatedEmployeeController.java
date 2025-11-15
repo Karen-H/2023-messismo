@@ -68,6 +68,8 @@ public class ValidatedEmployeeController {
             return ResponseEntity.status(HttpStatus.CREATED).body(orderService.addNewOrder(orderRequestDTO));
         } catch (UserNotFoundException | ProductQuantityBelowAvailableStock e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (ClientIdNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }

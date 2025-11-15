@@ -3,11 +3,12 @@ import apiUrl from "../deploy";
 
 const API_URL = apiUrl + "/api/v1/auth";
 
-const register = (username, email, password) => {
+const register = (username, email, password, userType = 'EMPLOYEE') => {
   return axios.post(API_URL + "/register", {
     username,
     email,
     password,
+    userType
   });
 };
 
@@ -18,7 +19,7 @@ const login = (email, password) => {
       password,
     })
     .then((response) => {
-      if ((response.data.access_token) && (response.data.role !== 'EMPLOYEE')) {
+      if (response.data.access_token) {
         localStorage.setItem("user", JSON.stringify(response.data));
       }
 

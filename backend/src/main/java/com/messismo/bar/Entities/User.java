@@ -36,11 +36,22 @@ public class User implements UserDetails {
     @Column(name = "role")
     private Role role;
 
+    @Column(name = "client_id", unique = true)
+    private String clientId;
+
     public User(String username, String email, String password){
         this.username=username;
         this.email=email;
         this.password=password;
         this.role=Role.EMPLOYEE;
+    }
+
+    public User(String username, String email, String password, String clientId){
+        this.username=username;
+        this.email=email;
+        this.password=password;
+        this.role=Role.CLIENT;
+        this.clientId=clientId;
     }
 
     @Override
@@ -95,5 +106,9 @@ public class User implements UserDetails {
 
     public void upgradeToManager() {
         this.role=Role.MANAGER;
+    }
+
+    public boolean isClient() {
+        return (this.role == Role.CLIENT);
     }
 }

@@ -189,6 +189,7 @@ const MoreDetails = styled(MdFastfood)`
 
 const MOBILE_COLUMNS = {
   id: true,
+  clientId: false,
   dateCreated: true,
   totalPrice: true,
   details: true,
@@ -197,6 +198,7 @@ const MOBILE_COLUMNS = {
 const ALL_COLUMNS = {
   id: true,
   username: true,
+  clientId: true,
   dateCreated: true,
   totalPrice: true,
   details: true,
@@ -315,6 +317,7 @@ function Orders() {
   const rows = orders.map((order) => ({
     id: order.id,
     username: order.user.username,
+    clientId: order.clientId,
     dateCreated: order.dateCreated,
     totalPrice: order.totalPrice.toLocaleString("en-US", {
       style: "currency",
@@ -341,6 +344,18 @@ function Orders() {
       headerAlign: "center",
       sortable: true,
       minWidth: 150,
+    },
+    {
+      field: "clientId",
+      headerName: "Client",
+      flex: 1,
+      align: "center",
+      headerAlign: "center",
+      sortable: true,
+      minWidth: 100,
+      renderCell: (params) => (
+        params.row.clientId ? params.row.clientId : "N/A"
+      ),
     },
     {
       field: "dateCreated",
@@ -511,7 +526,6 @@ function Orders() {
                           sortModel: [{ field: "dateCreated", sort: "desc" }],
                         },
                       }}
-                      sx={{ fontSize: "1rem" }}
                       autoHeight={true}
                       columns={columns}
                       columnVisibilityModel={columnVisible}
@@ -529,6 +543,7 @@ function Orders() {
                         bottom: params.isLastVisible ? 0 : 5,
                       })}
                       sx={{
+                        fontSize: "1rem",
                         border: 2,
                         borderColor: "#a4d4cc",
                         "& .MuiButtonBase-root": {

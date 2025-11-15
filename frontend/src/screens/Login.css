@@ -310,3 +310,40 @@ li {
     display: none;
   }
 }
+
+/* Switch para tipo de usuario */
+.switch-container {
+    display: flex;
+    border: 2px solid #053271;
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: rgba(167, 208, 205, 0.2);
+    margin-bottom: 10px;
+}
+
+.switch-option {
+    flex: 1;
+    padding: 12px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: transparent;
+    color: #053271;
+    font-weight: 500;
+}
+
+.switch-option.active {
+    background-color: #053271;
+    color: white;
+}
+
+.switch-option:hover:not(.active) {
+    background-color: rgba(167, 208, 205, 0.5);
+}
+
+.info-text {
+    color: #666;
+    font-size: 0.85rem;
+    margin-top: 5px;
+    font-style: italic;
+}

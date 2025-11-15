@@ -212,6 +212,7 @@ const OrderFormNew = ({ onCancel }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   const [selectedUnits, setSelectedUnits] = useState(0);
+  const [backendError, setBackendError] = useState("");
 
   const handleSearchChange = (event) => {
     setSearch(event.target.value);
@@ -325,6 +326,7 @@ const OrderFormNew = ({ onCancel }) => {
         },
         quantity: product.amount,
       })),
+      clientId: data.clientId || null,
       //totalPrice: totalPrice.toFixed(2),
       //totalCost: totalCost.toFixed(2),
     };
@@ -333,10 +335,17 @@ const OrderFormNew = ({ onCancel }) => {
       .addOrders(orderData)
       .then((response) => {
         console.log("Orden enviada con éxito:", response.data);
+        setBackendError(""); // Limpiar error si la orden es exitosa
         onCancel();
       })
       .catch((error) => {
         console.error("Error al enviar la orden:", error);
+        // Extraer el mensaje de error del backend
+        if (error.response && error.response.data) {
+          setBackendError(error.response.data);
+        } else {
+          setBackendError("Error al enviar la orden");
+        }
       });
 
     console.log(orderData);
@@ -461,25 +470,25 @@ const OrderFormNew = ({ onCancel }) => {
 
         <AddIcon onClick={addField} />
 
-        {/* <div className="form-paymentmethod">
-                    <Label>Payment Method</Label>
-                    <Controller
-                        control={control}
-                        defaultValue=""
-                        {...register('paymentmethod', { required: true })}
-                        render={({ field }) => (
-                            <Select {...field}>
-                                <option value="" disabled></option>
-                                {options.paymentMethods.map(method => (
-                                    <option key={method} value={method}>
-                                        {method}
-                                    </option>
-                                ))}
-                            </Select>
-                        )}
-                    />
-                    {errors.paymentmethod?.type === 'required' && <small className="fail">Field is empty</small>}
-                </div> */}
+        <div className="form-clientid">
+          <Label>Client ID (Optional)</Label>
+          <Input
+            name="clientId"
+            type="number"
+            placeholder="Enter Client ID"
+            {...register("clientId", {
+              min: 1,
+              valueAsNumber: true,
+              onChange: () => setBackendError("") // Limpiar error cuando el usuario cambie el campo
+            })}
+          />
+          {errors.clientId?.type === "min" && (
+            <small className="fail">Client ID must be a positive number</small>
+          )}
+          {backendError && (
+            <small className="fail">{backendError}</small>
+          )}
+        </div>
 
         <div className="form-totalprice">
           <Label>Total</Label>

@@ -12,6 +12,8 @@ import Login from "./screens/Login";
 import Register from "./screens/Register";
 import Dashboard from "./screens/Dashboard";
 import Goals from "./screens/Goals";
+import ClientHome from "./screens/ClientHome";
+import ClientProducts from "./screens/ClientProducts";
 
 function App() {
   return (
@@ -29,6 +31,8 @@ function App() {
           <Route path="/orders" element={<Orders />} />
           <Route path="/resources" element={<Resources />} />
           <Route path="/categories" element={<Categories />} />
+          <Route path="/client-home" element={<ClientHome />} />
+          <Route path="/client-products" element={<ClientProducts />} />
         </Routes>
       </BrowserRouter>
     </div>

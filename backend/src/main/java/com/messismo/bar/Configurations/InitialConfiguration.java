@@ -35,6 +35,8 @@ public class InitialConfiguration {
             System.out.println("ADDED ADMIN");
             addSampleEmployees(authenticationService, userRepository);
             System.out.println("ADDED EMPLOYEES");
+            addSampleClients(authenticationService, userRepository);
+            System.out.println("ADDED CLIENTS");
             addSampleCategories(categoryService);
             System.out.println("ADDED CATEGORIES");
             addSampleProducts(productService);
@@ -45,6 +47,8 @@ public class InitialConfiguration {
             System.out.println("CLOSED ORDERS");
             addSampleGoals(goalService);
             System.out.println("ADDED GOALS");
+            addOrdersWithClientIds(orderService, userRepository, productRepository);
+            System.out.println("ADDED ORDERS WITH CLIENT IDS");
             System.out.println("FINISH INITIAL LOADING");
         };
     }
@@ -204,13 +208,21 @@ public class InitialConfiguration {
         generateOrderRequestDTO(orderService, "martinguido@gmail.com", "2020-08-24 16:30:25", List.of(ProductOrderDTO.builder().product(productRepository.findByName("Margherita Pizza").get()).quantity(1).build(), ProductOrderDTO.builder().product(productRepository.findByName("Raspberry Soda").get()).quantity(2).build(), ProductOrderDTO.builder().product(productRepository.findByName("Espresso Coffee").get()).quantity(1).build()));
         generateOrderRequestDTO(orderService, "john.smith@example.com", "2020-09-05 19:45:50", List.of(ProductOrderDTO.builder().product(productRepository.findByName("Veal Milanese with Fries").get()).quantity(2).build(), ProductOrderDTO.builder().product(productRepository.findByName("Tiramisu").get()).quantity(1).build()));
         generateOrderRequestDTO(orderService, "sarah.jones@example.com", "2020-10-15 17:20:40", List.of(ProductOrderDTO.builder().product(productRepository.findByName("Shrimp Ceviche").get()).quantity(1).build(), ProductOrderDTO.builder().product(productRepository.findByName("Craft Beer").get()).quantity(2).build(), ProductOrderDTO.builder().product(productRepository.findByName("Italian Antipasto").get()).quantity(1).build()));
+        
+        // Sample orders with client IDs will be added separately
     }
 
 
     private void generateOrderRequestDTO(OrderService orderService, String userEmail, String stringDate, List<ProductOrderDTO> productOrderDTO) throws Exception {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date date = dateFormat.parse(stringDate);
-        orderService.addNewOrder(OrderRequestDTO.builder().registeredEmployeeEmail(userEmail).dateCreated(date).productOrders(productOrderDTO).build());
+        orderService.addNewOrder(OrderRequestDTO.builder().registeredEmployeeEmail(userEmail).dateCreated(date).productOrders(productOrderDTO).clientId(null).build());
+    }
+
+    private void generateOrderRequestDTO(OrderService orderService, String userEmail, String stringDate, List<ProductOrderDTO> productOrderDTO, Long clientId) throws Exception {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date date = dateFormat.parse(stringDate);
+        orderService.addNewOrder(OrderRequestDTO.builder().registeredEmployeeEmail(userEmail).dateCreated(date).productOrders(productOrderDTO).clientId(clientId).build());
     }
 
     private void addSampleEmployees(AuthenticationService authenticationService, UserRepository userRepository) throws Exception {
@@ -242,6 +254,150 @@ public class InitialConfiguration {
         authenticationService.register(user5);
         RegisterRequestDTO user6 = RegisterRequestDTO.builder().username("jane_doe").email("jane.doe@example.com").password("Password1").build();
         authenticationService.register(user6);
+    }
+
+    private void addSampleClients(AuthenticationService authenticationService, UserRepository userRepository) throws Exception {
+        // Cliente 1
+        RegisterRequestDTO client1 = RegisterRequestDTO.builder()
+                .username("maria_garcia")
+                .email("maria.garcia@client.com")
+                .password("Password1")
+                .userType("CLIENT")
+                .build();
+        authenticationService.register(client1);
+
+        // Cliente 2
+        RegisterRequestDTO client2 = RegisterRequestDTO.builder()
+                .username("carlos_rodriguez")
+                .email("carlos.rodriguez@client.com")
+                .password("Password1")
+                .userType("CLIENT")
+                .build();
+        authenticationService.register(client2);
+
+        // Cliente 3
+        RegisterRequestDTO client3 = RegisterRequestDTO.builder()
+                .username("ana_martinez")
+                .email("ana.martinez@client.com")
+                .password("Password1")
+                .userType("CLIENT")
+                .build();
+        authenticationService.register(client3);
+
+        // Cliente 4
+        RegisterRequestDTO client4 = RegisterRequestDTO.builder()
+                .username("diego_lopez")
+                .email("diego.lopez@client.com")
+                .password("Password1")
+                .userType("CLIENT")
+                .build();
+        authenticationService.register(client4);
+
+        // Cliente 5
+        RegisterRequestDTO client5 = RegisterRequestDTO.builder()
+                .username("sofia_perez")
+                .email("sofia.perez@client.com")
+                .password("Password1")
+                .userType("CLIENT")
+                .build();
+        authenticationService.register(client5);
+
+        // Cliente 6
+        RegisterRequestDTO client6 = RegisterRequestDTO.builder()
+                .username("miguel_sanchez")
+                .email("miguel.sanchez@client.com")
+                .password("Password1")
+                .userType("CLIENT")
+                .build();
+        authenticationService.register(client6);
+
+        // Cliente 7
+        RegisterRequestDTO client7 = RegisterRequestDTO.builder()
+                .username("laura_torres")
+                .email("laura.torres@client.com")
+                .password("Password1")
+                .userType("CLIENT")
+                .build();
+        authenticationService.register(client7);
+
+        // Cliente 8
+        RegisterRequestDTO client8 = RegisterRequestDTO.builder()
+                .username("roberto_flores")
+                .email("roberto.flores@client.com")
+                .password("Password1")
+                .userType("CLIENT")
+                .build();
+        authenticationService.register(client8);
+    }
+
+    private void addOrdersWithClientIds(OrderService orderService, UserRepository userRepository, ProductRepository productRepository) throws Exception {
+        System.out.println("Starting to create orders with Client IDs...");
+        
+        // Verificar que los clientes existen antes de obtener sus IDs
+        var mariaUser = userRepository.findByEmail("maria.garcia@client.com");
+        if (mariaUser.isEmpty()) {
+            System.out.println("ERROR: Cliente maria.garcia@client.com no encontrado");
+            return;
+        }
+        
+        var carlosUser = userRepository.findByEmail("carlos.rodriguez@client.com");
+        if (carlosUser.isEmpty()) {
+            System.out.println("ERROR: Cliente carlos.rodriguez@client.com no encontrado");
+            return;
+        }
+        
+        var anaUser = userRepository.findByEmail("ana.martinez@client.com");
+        if (anaUser.isEmpty()) {
+            System.out.println("ERROR: Cliente ana.martinez@client.com no encontrado");
+            return;
+        }
+        
+        // Obtener los client IDs de los clientes creados y convertir de String a Long
+        Long mariaClientId = Long.parseLong(mariaUser.get().getClientId());
+        Long carlosClientId = Long.parseLong(carlosUser.get().getClientId());
+        Long anaClientId = Long.parseLong(anaUser.get().getClientId());
+        
+        System.out.println("Client IDs obtenidos: Maria=" + mariaClientId + ", Carlos=" + carlosClientId + ", Ana=" + anaClientId);
+
+        // Crear órdenes con Client IDs reales
+        generateOrderRequestDTO(orderService, "martinguido@gmail.com", "2023-11-01 12:30:00", 
+            List.of(ProductOrderDTO.builder().product(productRepository.findByName("Margherita Pizza").get()).quantity(2).build(), 
+                   ProductOrderDTO.builder().product(productRepository.findByName("Lemon Mojito").get()).quantity(1).build()), 
+            mariaClientId);
+
+        generateOrderRequestDTO(orderService, "john.smith@example.com", "2023-11-02 14:15:30", 
+            List.of(ProductOrderDTO.builder().product(productRepository.findByName("Caesar Salad").get()).quantity(1).build(), 
+                   ProductOrderDTO.builder().product(productRepository.findByName("Tiramisu").get()).quantity(2).build()), 
+            carlosClientId);
+
+        generateOrderRequestDTO(orderService, "sarah.jones@example.com", "2023-11-03 18:45:15", 
+            List.of(ProductOrderDTO.builder().product(productRepository.findByName("Veal Milanese with Fries").get()).quantity(1).build(), 
+                   ProductOrderDTO.builder().product(productRepository.findByName("Craft Beer").get()).quantity(2).build()), 
+            anaClientId);
+
+        // Crear órdenes adicionales con otros clientes
+        var diegoUser = userRepository.findByEmail("diego.lopez@client.com");
+        var sofiaUser = userRepository.findByEmail("sofia.perez@client.com");
+        
+        if (diegoUser.isEmpty() || sofiaUser.isEmpty()) {
+            System.out.println("ERROR: No se encontraron todos los clientes adicionales");
+            return;
+        }
+        
+        Long diegoClientId = Long.parseLong(diegoUser.get().getClientId());
+        Long sofiaClientId = Long.parseLong(sofiaUser.get().getClientId());
+        
+        System.out.println("Client IDs adicionales obtenidos: Diego=" + diegoClientId + ", Sofia=" + sofiaClientId);
+
+        generateOrderRequestDTO(orderService, "martinguido@gmail.com", "2023-11-04 16:20:00", 
+            List.of(ProductOrderDTO.builder().product(productRepository.findByName("Shrimp Ceviche").get()).quantity(1).build(), 
+                   ProductOrderDTO.builder().product(productRepository.findByName("Craft Beer").get()).quantity(1).build()), 
+            diegoClientId);
+
+        generateOrderRequestDTO(orderService, "john.smith@example.com", "2023-11-05 19:30:15", 
+            List.of(ProductOrderDTO.builder().product(productRepository.findByName("Italian Antipasto").get()).quantity(1).build(), 
+                   ProductOrderDTO.builder().product(productRepository.findByName("Caesar Salad").get()).quantity(1).build()), 
+            sofiaClientId);
     }
 
     private void addSampleCategories(CategoryService categoryService) throws Exception {

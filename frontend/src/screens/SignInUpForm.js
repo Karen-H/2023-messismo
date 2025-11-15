@@ -322,8 +322,9 @@ function SignInUpForm() {
           userRole === "VALIDATEDEMPLOYEE"
         ) {
           navigate("/homepage");
-        }
-        if (userRole === "EMPLOYEE") {
+        } else if (userRole === "CLIENT") {
+          navigate("/client-home");
+        } else if (userRole === "EMPLOYEE") {
           setIsRegistered(true);
           setSignInPopUp(true);
         }
@@ -341,6 +342,10 @@ function SignInUpForm() {
       currentUser.role === "VALIDATEDEMPLOYEE")
   ) {
     return <Navigate to="/homepage" />;
+  }
+
+  if (isLoggedIn && currentUser.role === "CLIENT") {
+    return <Navigate to="/client-home" />;
   }
 
   const handleSignInInput = (e) => {

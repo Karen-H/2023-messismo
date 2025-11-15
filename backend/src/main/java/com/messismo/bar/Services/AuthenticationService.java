@@ -29,6 +29,8 @@ public class AuthenticationService {
     private final TokenRepository tokenRepository;
 
     private final PasswordEncoder passwordEncoder;
+    
+    private final ClientIdService clientIdService;
 
     public AuthenticationResponseDTO register(RegisterRequestDTO request) throws Exception {
         try {
@@ -37,12 +39,24 @@ public class AuthenticationService {
             if (employeeByUsername.isPresent() || employeeByMail.isPresent()) {
                 throw new UserAlreadyExistsException("User already exists");
             } else {
-                User newEmployee = new User(request.getUsername(), request.getEmail(), passwordEncoder.encode(request.getPassword()));
-                userRepository.save(newEmployee);
-                String jwtToken = jwtService.generateToken(newEmployee);
-                String refreshToken = jwtService.generateRefreshToken(newEmployee);
-                saveUserToken(newEmployee, jwtToken);
-                return new AuthenticationResponseDTO(jwtToken, refreshToken, newEmployee.getEmail(), newEmployee.getRole());
+                User newUser;
+                
+                if ("CLIENT".equals(request.getUserType())) {
+                    // Generar ID único para cliente
+                    String clientId = clientIdService.generateUniqueClientId();
+                    newUser = new User(request.getUsername(), request.getEmail(), 
+                                     passwordEncoder.encode(request.getPassword()), clientId);
+                } else {
+                    // Empleado tradicional
+                    newUser = new User(request.getUsername(), request.getEmail(), 
+                                     passwordEncoder.encode(request.getPassword()));
+                }
+                
+                userRepository.save(newUser);
+                String jwtToken = jwtService.generateToken(newUser);
+                String refreshToken = jwtService.generateRefreshToken(newUser);
+                saveUserToken(newUser, jwtToken);
+                return new AuthenticationResponseDTO(jwtToken, refreshToken, newUser.getEmail(), newUser.getRole());
             }
         } catch (UserAlreadyExistsException e) {
             throw e;

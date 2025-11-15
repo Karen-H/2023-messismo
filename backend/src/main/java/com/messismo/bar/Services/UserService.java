@@ -1,5 +1,6 @@
 package com.messismo.bar.Services;
 
+import com.messismo.bar.DTOs.ClientProfileDTO;
 import com.messismo.bar.DTOs.UserDTO;
 import com.messismo.bar.DTOs.UserIdDTO;
 import com.messismo.bar.Entities.User;
@@ -69,6 +70,25 @@ public class UserService implements UserDetailsService {
             throw e;
         } catch (Exception e) {
             throw new Exception("Cannot upgrade to manager");
+        }
+    }
+
+    public ClientProfileDTO getClientProfile(String email) throws Exception {
+        try {
+            User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+            
+            if (!user.isClient()) {
+                throw new Exception("User is not a client");
+            }
+            
+            return ClientProfileDTO.builder()
+                .username(user.getFunctionalUsername())
+                .email(user.getEmail())
+                .clientId(user.getClientId())
+                .build();
+        } catch (Exception e) {
+            throw new Exception("Error retrieving client profile");
         }
     }
 }

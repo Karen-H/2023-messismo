@@ -32,6 +32,7 @@ const Alert = forwardRef(function Alert(props, ref) {
 const Register = () => {
 
     const [open, setOpen] = useState(false);
+    const [userType, setUserType] = useState('CLIENT'); // Nuevo estado para tipo de usuario
 
     const [isRegistered, setIsRegistered] = useState(false);
 
@@ -61,7 +62,7 @@ const Register = () => {
         dispatch(clearMessage());
     }, [dispatch]);
 
-    if ((isLoggedIn) && (currentUser.role === "ADMIN" || currentUser.role === "MANAGER" || currentUser.role === "VALIDATEDEMPLOYEE" )){
+    if ((isLoggedIn) && (currentUser.role === "ADMIN" || currentUser.role === "MANAGER" || currentUser.role === "VALIDATEDEMPLOYEE" || currentUser.role === "CLIENT")){
         return <Navigate to="/homepage" />;
     }
 
@@ -71,7 +72,7 @@ const Register = () => {
         const email = userData.email;
         const password = userData.password;
 
-        dispatch(register({ username, email, password }))
+        dispatch(register({ username, email, password, userType }))
         .unwrap()
         .then(() => {
             setIsRegistered(false);
@@ -162,6 +163,21 @@ const Register = () => {
                                 {signuperrors.password && <ErrorMessage>{signuperrors.password}</ErrorMessage>}
                             </div>
 
+                            {/* Nuevo switch para tipo de usuario */}
+                            <div className='inputDiv'>
+                                <label className='labl'>Account Type</label>
+                                <div className='switch-container'>
+                                    <div className={`switch-option ${userType === 'CLIENT' ? 'active' : ''}`} 
+                                         onClick={() => setUserType('CLIENT')}>
+                                        Client
+                                    </div>
+                                    <div className={`switch-option ${userType === 'EMPLOYEE' ? 'active' : ''}`} 
+                                         onClick={() => setUserType('EMPLOYEE')}>
+                                        Employee
+                                    </div>
+                                </div>
+                            </div>
+
                             <Link type='submit' className='btn flx'
                             onClick={() => {
                                 handleSignUpValidation();
@@ -185,7 +201,9 @@ const Register = () => {
 
                         <div className='textDiv'>
                             <h2 className='title'>Hi There</h2>
-                            <p className='subtitle'>Please note that admin verification is required to activate your account</p>
+                            <p className='subtitle'>{userType === 'CLIENT' ? 
+                                'Create your account and start exploring our menu!' : 
+                                'Please note that admin verification is required to activate your account'}</p>
                         </div>
 
                         <div className='footerDiv flx'>
@@ -198,7 +216,7 @@ const Register = () => {
 
                 </div>
 
-                { SignUpPopUp && <SUpPopUp setSignUpPopUp={setSignUpPopUp} isRegistered={isRegistered} /> }
+                { SignUpPopUp && <SUpPopUp setSignUpPopUp={setSignUpPopUp} isRegistered={isRegistered} userType={userType} /> }
 
             </div>
 

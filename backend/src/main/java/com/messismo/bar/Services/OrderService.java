@@ -24,11 +24,18 @@ public class OrderService {
     public String addNewOrder(OrderRequestDTO orderRequestDTO) throws Exception {
         try {
             User employee = userRepository.findByEmail(orderRequestDTO.getRegisteredEmployeeEmail()).orElseThrow(() -> new UserNotFoundException("No user has that email"));
+            
+            // Validar clientId si se proporciona
+            if (orderRequestDTO.getClientId() != null) {
+                userRepository.findByClientId(String.valueOf(orderRequestDTO.getClientId()))
+                    .orElseThrow(() -> new ClientIdNotFoundException("Client ID " + orderRequestDTO.getClientId() + " not found"));
+            }
+            
             NewProductOrderListDTO newProductOrderListDTO = createProductOrder(orderRequestDTO.getProductOrders());
-            Order newOrder = new Order(employee, orderRequestDTO.getDateCreated(), newProductOrderListDTO.getProductOrderList(), newProductOrderListDTO.getTotalPrice(), newProductOrderListDTO.getTotalCost());
+            Order newOrder = new Order(employee, orderRequestDTO.getDateCreated(), newProductOrderListDTO.getProductOrderList(), newProductOrderListDTO.getTotalPrice(), newProductOrderListDTO.getTotalCost(), orderRequestDTO.getClientId());
             orderRepository.save(newOrder);
             return "Order created successfully";
-        } catch (UserNotFoundException | ProductQuantityBelowAvailableStock e) {
+        } catch (UserNotFoundException | ProductQuantityBelowAvailableStock | ClientIdNotFoundException e) {
             throw e;
         } catch (Exception e) {
             throw new Exception("CANNOT create an order at the moment");

@@ -144,6 +144,7 @@ function Navbar() {
     const [showAdminBoard, setShowAdminBoard] = useState(false);
     const [showValidatedEmployeeBoard, setShowValidatedEmployeeBoard] = useState(false);
     const [showEmployeeBoard, setShowEmployeeBoard] = useState(false);
+    const [showClientBoard, setShowClientBoard] = useState(false);
 
     const { user: currentUser } = useSelector((state) => state.auth);
     
@@ -151,10 +152,13 @@ function Navbar() {
         if (currentUser) {
             setShowManagerBoard(currentUser.role === "MANAGER");
             setShowAdminBoard(currentUser.role === "ADMIN");
-            setShowValidatedEmployeeBoard(currentUser.role === "VALIDATEDEMPLOYEE")
+            setShowValidatedEmployeeBoard(currentUser.role === "VALIDATEDEMPLOYEE");
+            setShowClientBoard(currentUser.role === "CLIENT");
         } else {
             setShowManagerBoard(false);
             setShowAdminBoard(false);
+            setShowValidatedEmployeeBoard(false);
+            setShowClientBoard(false);
         }
     }, [currentUser]);
 
@@ -175,11 +179,20 @@ function Navbar() {
         
             <div className={`links ${clicked ? 'active' : ''}`}>
 
-                <NavLink to={'/homepage'} onClick={clicked ? handleClick : undefined}>
-                    <FaHome className='icon'/>
-                    <span>Home</span>
-                </NavLink>
+                {/* Home - Diferentes rutas según el tipo de usuario */}
+                {showClientBoard ? (
+                    <NavLink to={'/client-home'} onClick={clicked ? handleClick : undefined}>
+                        <FaHome className='icon'/>
+                        <span>Home</span>
+                    </NavLink>
+                ) : (
+                    <NavLink to={'/homepage'} onClick={clicked ? handleClick : undefined}>
+                        <FaHome className='icon'/>
+                        <span>Home</span>
+                    </NavLink>
+                )}
 
+                {/* Dashboard - Solo para Manager y Admin */}
                 {(showManagerBoard || showAdminBoard) && (
                     <NavLink to={'/dashboard'} onClick={clicked ? handleClick : undefined}>
                         <VscGraph className='icon'/>
@@ -187,6 +200,7 @@ function Navbar() {
                     </NavLink>
                 )}
 
+                {/* Goals - Solo para Manager y Admin */}
                 {(showManagerBoard || showAdminBoard) && (
                     <NavLink to={'/goals'} onClick={clicked ? handleClick : undefined}>
                         <GiStairsGoal className='icon'/>
@@ -194,13 +208,20 @@ function Navbar() {
                     </NavLink>
                 )}
 
-                {(showManagerBoard || showAdminBoard || showValidatedEmployeeBoard) && (
+                {/* Products - Diferentes rutas según el tipo de usuario */}
+                {showClientBoard ? (
+                    <NavLink to={'/client-products'} onClick={clicked ? handleClick : undefined}>
+                        <PiCoffeeFill className='icon'/>
+                        <span>Menu</span>
+                    </NavLink>
+                ) : (showManagerBoard || showAdminBoard || showValidatedEmployeeBoard) && (
                     <NavLink to={'/products'} onClick={clicked ? handleClick : undefined}>
                         <PiCoffeeFill className='icon'/>
                         <span>Products</span>
                     </NavLink>
                 )}
 
+                {/* Orders - Solo para empleados */}
                 {(showManagerBoard || showAdminBoard || showValidatedEmployeeBoard) && (
                     <NavLink to={'/orders'} onClick={clicked ? handleClick : undefined}>
                         <HiShoppingBag className='icon'/>
@@ -208,6 +229,7 @@ function Navbar() {
                     </NavLink>
                 )}
 
+                {/* Resources - Solo para Manager y Admin */}
                 {(showManagerBoard || showAdminBoard) && (
                     <NavLink to={'/resources'} onClick={clicked ? handleClick : undefined}>
                         <BsPersonCircle className='icon'/>
@@ -215,6 +237,7 @@ function Navbar() {
                     </NavLink>
                 )}
 
+                {/* Categories - Solo para empleados */}
                 {(showManagerBoard || showAdminBoard || showValidatedEmployeeBoard) && (
                     <NavLink to={'/categories'} onClick={clicked ? handleClick : undefined}>
                         <CategoryIcon className='icon'/>
@@ -222,6 +245,7 @@ function Navbar() {
                     </NavLink>
                 )}
 
+                {/* Sign Out - Para todos */}
                 <NavLink to={'/'} onClick={() => {handleSignOut()}}>
                     <ImExit className='icon'/>
                     <span>Sign Out</span>
