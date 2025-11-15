@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import "../Resources.css";
+import "../Users.css";
 import { useSelector, useDispatch } from "react-redux";
 // import { acceptUser, rejectUser, deleteUser } from '../redux/userSlice';
 import { validateUser, upgradeUser } from "../redux/userSlice";
@@ -184,13 +184,14 @@ const Subheader = styled.h2`
   margin-left: 10px;
 `;
 
-function Resources() {
+function Users() {
   const [randomImage, setRandomImage] = useState(null);
 
   const { user: currentUser } = useSelector((state) => state.auth);
   const clicked = useSelector((state) => state.navigation.clicked);
 
   const [allEmployees, setAllEmployees] = useState([]);
+  const [allClients, setAllClients] = useState([]);
   const actualUserRole = currentUser.role;
   const [isLoading, setIsLoading] = useState(true);
 
@@ -207,6 +208,17 @@ function Resources() {
       .catch((error) => {
         console.error("Error al obtener la lista de empleados:", error);
         setIsLoading(false);
+      });
+
+    employeeService
+      .getAllClients()
+      .then((response) => {
+        console.log("Clients data:", response.data);
+        const clients = response.data;
+        setAllClients(clients);
+      })
+      .catch((error) => {
+        console.error("Error al obtener la lista de clientes:", error);
       });
   }, []);
 
@@ -307,6 +319,25 @@ function Resources() {
       </div>
   )};
 
+  const renderClient = (user) => {
+
+    const randomIndex = Math.floor(Math.random() * userimages.length);
+    const randomImage = userimages[randomIndex];
+
+    return(
+      <div key={user.id} className="card">
+
+        <UserImage src={randomImage} alt={`User ${user.clientId}`} />
+
+        <div className="card-body">
+          <h2 className="card-username">{user.username}</h2>
+          <p className="card-email">{user.email}</p>
+          <p className="card-email">Client ID: {user.clientId}</p>
+        </div>
+
+      </div>
+  )};
+
   return (
     <Container>
       <Navbar />
@@ -360,6 +391,14 @@ function Resources() {
               </Resource>
             </UserItem>
           )}
+          {allClients.length > 0 && (
+            <UserItem>
+              <Subheader>Clients</Subheader>
+              <Resource>
+                {allClients.map(renderClient)}
+              </Resource>
+            </UserItem>
+          )}
         </UserContainer>
       )}
       </MainContent>
@@ -367,4 +406,4 @@ function Resources() {
   );
 }
 
-export default Resources;
+export default Users;

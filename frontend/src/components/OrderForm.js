@@ -351,12 +351,11 @@ const OrderForm = ({ onCancel }) => {
       .addOrders(orderData)
       .then((response) => {
         console.log("Orden enviada con éxito:", response.data);
-        setBackendError(""); // Limpiar error si la orden es exitosa
+        setBackendError("");
         onCancel();
       })
       .catch((error) => {
         console.error("Error al enviar la orden:", error);
-        // Extraer el mensaje de error del backend
         if (error.response && error.response.data) {
           setBackendError(error.response.data);
         } else {
@@ -528,7 +527,7 @@ const OrderForm = ({ onCancel }) => {
             {...register("clientId", {
               min: 1,
               valueAsNumber: true,
-              onChange: () => setBackendError("") // Limpiar error cuando el usuario cambie el campo
+              onChange: () => setBackendError("")
             })}
           />
           {errors.clientId?.type === "min" && (

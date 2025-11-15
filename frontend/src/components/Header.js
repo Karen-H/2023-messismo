@@ -157,9 +157,9 @@ const Header = () => {
                 )}
 
                 {userType === 'admin' && userPending === 'no' && (
-                    <NavLink to={'/resources'} expanded={open}>
+                    <NavLink to={'/users'} expanded={open}>
                         <BsPersonCircle className='icon'/>
-                        <span>Resources</span>
+                        <span>Users</span>
                     </NavLink>
                 )}
                 

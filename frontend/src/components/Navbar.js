@@ -229,11 +229,11 @@ function Navbar() {
                     </NavLink>
                 )}
 
-                {/* Resources - Solo para Manager y Admin */}
+                {/* Users - Solo para Manager y Admin */}
                 {(showManagerBoard || showAdminBoard) && (
-                    <NavLink to={'/resources'} onClick={clicked ? handleClick : undefined}>
+                    <NavLink to={'/users'} onClick={clicked ? handleClick : undefined}>
                         <BsPersonCircle className='icon'/>
-                        <span>Resources</span>
+                        <span>Users</span>
                     </NavLink>
                 )}
 

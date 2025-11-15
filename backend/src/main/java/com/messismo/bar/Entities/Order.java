@@ -64,7 +64,7 @@ public class Order {
             this.totalPrice= totalPrice;
             this.totalCost=totalCost;
             this.status="Open";
-            this.clientId = null; // Default to null for existing functionality
+            this.clientId = null;
         }
     }
 

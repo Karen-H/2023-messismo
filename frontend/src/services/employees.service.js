@@ -10,6 +10,11 @@ const getAllEmployees = () => {
   'Content-Type' : 'application/json'});
 };
 
+const getAllClients = () => {
+  return axios.get(apiUrl + "/api/v1/manager/getAllClients", { headers: authHeader() , method: 'GET',      
+  'Content-Type' : 'application/json'});
+};
+
 
 const validateEmployee = (employeeId) => {
     const data = {
@@ -45,6 +50,7 @@ const validateAdmin = (employeeId) => {
 
 const employeeService = {
     getAllEmployees,
+    getAllClients,
     validateEmployee,
     validateAdmin,
 

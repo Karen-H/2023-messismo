@@ -56,7 +56,6 @@ public enum Role {
                     EMPLOYEE_READ,
                     EMPLOYEE_UPDATE,
                     EMPLOYEE_DELETE
-                    // Removido EMPLOYEE_CREATE - solo ADMIN debe crear empleados
             )
     ),
     VALIDATEDEMPLOYEE(
@@ -68,7 +67,6 @@ public enum Role {
                     EMPLOYEE_READ,
                     EMPLOYEE_UPDATE,
                     EMPLOYEE_DELETE
-                    // Removido EMPLOYEE_CREATE - empleados validados no crean otros empleados
             )
     ),
     EMPLOYEE(
@@ -76,7 +74,6 @@ public enum Role {
                     EMPLOYEE_READ,
                     EMPLOYEE_UPDATE,
                     EMPLOYEE_DELETE
-                    // Removido EMPLOYEE_CREATE - empleados básicos no crean otros empleados
             )
     )
 

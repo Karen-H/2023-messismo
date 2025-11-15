@@ -33,8 +33,32 @@ public class UserService implements UserDetailsService {
         List<User> allEmployees = userRepository.findAll();
         List<UserDTO> response = new ArrayList<>();
         for (User user : allEmployees) {
-            UserDTO newUserDTO = UserDTO.builder().id(user.getId()).role(user.getRole()).username(user.getFunctionalUsername()).email(user.getEmail()).build();
+            UserDTO newUserDTO = UserDTO.builder()
+                .id(user.getId())
+                .role(user.getRole())
+                .username(user.getFunctionalUsername())
+                .email(user.getEmail())
+                .clientId(user.getClientId())
+                .build();
             response.add(newUserDTO);
+        }
+        return response;
+    }
+
+    public List<UserDTO> getAllClients() {
+        List<User> allUsers = userRepository.findAll();
+        List<UserDTO> response = new ArrayList<>();
+        for (User user : allUsers) {
+            if (user.isClient()) {
+                UserDTO newUserDTO = UserDTO.builder()
+                    .id(user.getId())
+                    .role(user.getRole())
+                    .username(user.getFunctionalUsername())
+                    .email(user.getEmail())
+                    .clientId(user.getClientId())
+                    .build();
+                response.add(newUserDTO);
+            }
         }
         return response;
     }

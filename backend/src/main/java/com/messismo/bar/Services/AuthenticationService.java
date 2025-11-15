@@ -42,7 +42,6 @@ public class AuthenticationService {
                 User newUser;
                 
                 if ("CLIENT".equals(request.getUserType())) {
-                    // Generar ID único para cliente
                     String clientId = clientIdService.generateUniqueClientId();
                     newUser = new User(request.getUsername(), request.getEmail(), 
                                      passwordEncoder.encode(request.getPassword()), clientId);
