@@ -194,6 +194,7 @@ const MOBILE_COLUMNS = {
   totalPrice: true,
   details: true,
   status: true,
+  points: true,
 };
 const ALL_COLUMNS = {
   id: true,
@@ -203,6 +204,7 @@ const ALL_COLUMNS = {
   totalPrice: true,
   details: true,
   status: true,
+  points: true,
 };
 
 function Orders() {
@@ -225,6 +227,7 @@ function Orders() {
   const [alertText, setAlertText] = useState("");
   const [isOperationSuccessful, setIsOperationSuccessful] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [conversionRate, setConversionRate] = useState(100);
 
   const theme = useTheme();
   const matches = useMediaQuery(theme.breakpoints.up("sm"));
@@ -248,7 +251,22 @@ function Orders() {
         console.error("Error al mostrar las ordenes", error);
         setIsLoading(false);
       });
-  }, [isOrderFormVisible, open, isEditFormVisible, openEditForm]);
+
+    // Load current conversion rate
+    fetch("http://localhost:8080/settings/points-conversion", {
+      headers: {
+        "Authorization": "Bearer " + currentUser.access_token,
+        "Content-Type": "application/json"
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      setConversionRate(data.conversionRate);
+    })
+    .catch(error => {
+      console.error("Error al cargar tasa de conversión", error);
+    });
+  }, [isOrderFormVisible, open, isEditFormVisible, openEditForm, currentUser.access_token]);
 
   useEffect(() => {
     ordersService
@@ -312,6 +330,18 @@ function Orders() {
   };
 
   const rows = orders.map((order) => {
+    const isClosed = order.status && order.status === "Closed";
+    let points = "0.00";
+    
+    if (isClosed && order.clientId) {
+      if (order.pointsAwarded) {
+        points = order.pointsAwarded.toFixed(2);
+      } else {
+        // Órdenes históricas: calcular con tasa por defecto ($100 = 1 punto)
+        points = (order.totalPrice / 100).toFixed(2);
+      }
+    }
+    
     return {
       id: order.id,
       username: order.user.username,
@@ -322,6 +352,7 @@ function Orders() {
         currency: "USD",
       }),
       status: order.status,
+      points: points,
     };
   });
 
@@ -437,6 +468,22 @@ function Orders() {
       },
     },
     {
+      field: "points",
+      headerName: "Points",
+      flex: 1,
+      align: "center",
+      headerAlign: "center",
+      sortable: true,
+      minWidth: 100,
+      renderCell: (params) => {
+        return (
+          <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#a4d4cc' }}>
+            {params.value}
+          </Typography>
+        );
+      },
+    },
+    {
       field: "edit",
       headerName: "Edit",
       flex: 1,
@@ -514,9 +561,16 @@ function Orders() {
                     <Typography
                       variant="h3"
                       component="h3"
-                      sx={{ textAlign: "center", mt: 3, mb: 3, color: "white" }}
+                      sx={{ textAlign: "center", mt: 3, mb: 1, color: "white" }}
                     >
                       Orders
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      component="p"
+                      sx={{ textAlign: "center", mb: 3, color: "white", fontSize: "0.9rem" }}
+                    >
+                      Conversión actual: ${conversionRate} = 1 punto
                     </Typography>
                     <DataGrid
                       initialState={{

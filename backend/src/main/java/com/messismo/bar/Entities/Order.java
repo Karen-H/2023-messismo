@@ -45,6 +45,8 @@ public class Order {
     private String status;
     @Column(name = "client_id")
     private Long clientId;
+    @Column(name = "points_awarded")
+    private Double pointsAwarded;
 
     @Override
     public String toString() {

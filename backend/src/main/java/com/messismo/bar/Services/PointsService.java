@@ -19,6 +19,7 @@ public class PointsService {
 
     private final PointsAccountRepository pointsAccountRepository;
     private final PointsTransactionRepository pointsTransactionRepository;
+    private final SettingsService settingsService;
 
     /**
      * Crea una nueva cuenta de puntos para un cliente
@@ -42,8 +43,10 @@ public class PointsService {
     /**
      * Añade puntos a la cuenta de un cliente por una orden cerrada
      */
-    public void addPointsForOrder(String clientId, Double orderTotal, Long orderId) {
-        Double points = orderTotal / 100.0; // $100 = 1 punto
+    public Double addPointsForOrder(String clientId, Double orderTotal, Long orderId) {
+        // Obtener la tasa de conversión dinámica desde configuración
+        double conversionRate = settingsService.getPointsConversionRate();
+        Double points = orderTotal / conversionRate;
         
         PointsAccount account = getOrCreateAccount(clientId);
         account.addPoints(points);
@@ -55,9 +58,13 @@ public class PointsService {
             TransactionType.EARNED, 
             points,
             "ORDER_#" + orderId,
-            "Puntos ganados por orden de $" + String.format("%.2f", orderTotal)
+            "Puntos ganados por orden de $" + String.format("%.2f", orderTotal) + 
+            " (tasa: $" + String.format("%.0f", conversionRate) + " = 1 punto)"
         );
         pointsTransactionRepository.save(transaction);
+        
+        // Devolver los puntos calculados para que se guarden en la orden
+        return points;
     }
 
     /**
@@ -125,5 +132,20 @@ public class PointsService {
             );
             pointsTransactionRepository.save(transaction);
         }
+    }
+
+    /**
+     * Obtiene la tasa de conversión actual y calcula cuántos puntos se obtienen por un monto
+     */
+    public Double calculatePointsForAmount(Double amount) {
+        double conversionRate = settingsService.getPointsConversionRate();
+        return amount / conversionRate;
+    }
+
+    /**
+     * Obtiene información sobre la configuración actual de puntos
+     */
+    public Double getCurrentConversionRate() {
+        return settingsService.getPointsConversionRate();
     }
 }

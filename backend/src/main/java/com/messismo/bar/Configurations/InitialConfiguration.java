@@ -400,7 +400,6 @@ public class InitialConfiguration {
                 
                 if (totalPoints > 0) {
                     pointsService.migrateExistingPoints(client.getClientId(), totalPoints);
-                    System.out.println("Migrated " + totalPoints + " points for client " + client.getClientId());
                 }
             } catch (Exception e) {
                 System.err.println("Error migrating points for client " + client.getClientId() + ": " + e.getMessage());

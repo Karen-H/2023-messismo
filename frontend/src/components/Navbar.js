@@ -15,6 +15,7 @@ import { toggleClicked } from '../redux/navSlice';
 import { Navigate } from 'react-router-dom';
 import { logout } from "../redux/auth";
 import CategoryIcon from '@mui/icons-material/Category';
+import SettingsIcon from '@mui/icons-material/Settings';
 import logoImage from '../images/logo2.png'
 
 
@@ -242,6 +243,14 @@ function Navbar() {
                     <NavLink to={'/users'} onClick={clicked ? handleClick : undefined}>
                         <BsPersonCircle className='icon'/>
                         <span>Users</span>
+                    </NavLink>
+                )}
+
+                {/* Settings - Solo para Manager y Admin */}
+                {(showManagerBoard || showAdminBoard) && (
+                    <NavLink to={'/settings'} onClick={clicked ? handleClick : undefined}>
+                        <SettingsIcon className='icon'/>
+                        <span>Settings</span>
                     </NavLink>
                 )}
 

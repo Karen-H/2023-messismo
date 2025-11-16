@@ -25,7 +25,10 @@ const closeOrder = (orderId) => {
 };
 
 const closeOrderWithClient = (closeOrderData) => {
-  return axios.post(API_URL_close_with_client, closeOrderData, { headers: authHeader() });
+  return axios.post(API_URL_close_with_client, closeOrderData, { 
+    headers: authHeader(),
+    timeout: 30000 // 30 segundos timeout
+  });
 };
 
 const ordersService = {

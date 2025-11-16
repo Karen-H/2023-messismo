@@ -73,11 +73,13 @@ public class OrderService {
             
             // Añadir puntos si la orden tiene clientId asignado
             if (savedOrder.getClientId() != null) {
-                pointsService.addPointsForOrder(
+                Double pointsAwarded = pointsService.addPointsForOrder(
                     String.valueOf(savedOrder.getClientId()), 
                     savedOrder.getTotalPrice(), 
                     savedOrder.getId()
                 );
+                savedOrder.setPointsAwarded(pointsAwarded);
+                orderRepository.save(savedOrder);
             }
             
             return "Order closed successfully";

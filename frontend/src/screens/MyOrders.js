@@ -136,7 +136,8 @@ function MyOrders() {
   const matches = useMediaQuery(theme.breakpoints.up("sm"));
 
   const [orders, setOrders] = useState([]);
-  const [totalPoints, setTotalPoints] = useState(0);
+  const [totalPoints, setTotalPoints] = useState("0.00");
+  const [conversionRate, setConversionRate] = useState(100);
   const [isLoading, setIsLoading] = useState(true);
 
   const [columnVisible, setColumnVisible] = useState(ALL_COLUMNS);
@@ -172,7 +173,22 @@ function MyOrders() {
         console.error("Error al cargar puntos", error);
         setTotalPoints("0.00");
       });
-  }, []);
+
+    // Load current conversion rate
+    fetch("http://localhost:8080/settings/points-conversion", {
+      headers: {
+        "Authorization": "Bearer " + currentUser.access_token,
+        "Content-Type": "application/json"
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      setConversionRate(data.conversionRate);
+    })
+    .catch(error => {
+      console.error("Error al cargar tasa de conversión", error);
+    });
+  }, [currentUser.access_token]);
 
   if (!currentUser || currentUser.role !== "CLIENT") {
     return <Navigate to="/login" />;
@@ -193,8 +209,16 @@ function MyOrders() {
 
   const rows = orders.map((order) => {
     const isClosed = order.status && order.status.toUpperCase() === "CLOSED";
-    const points = isClosed && order.clientId ? 
-      (order.totalPrice / 100).toFixed(2) : "0.00";
+    let points = "0.00";
+    
+    if (isClosed && order.clientId) {
+      if (order.pointsAwarded) {
+        points = order.pointsAwarded.toFixed(2);
+      } else {
+        // Órdenes históricas: calcular con tasa por defecto ($100 = 1 punto)
+        points = (order.totalPrice / 100).toFixed(2);
+      }
+    }
     
     return {
       id: order.id,
@@ -329,9 +353,16 @@ function MyOrders() {
                 <Typography
                   variant="h5"
                   component="h5"
-                  sx={{ textAlign: "center", mb: 3, color: "#a4d4cc", fontWeight: "bold" }}
+                  sx={{ textAlign: "center", mb: 1, color: "#a4d4cc", fontWeight: "bold" }}
                 >
                   Total Points: {totalPoints}
+                </Typography>
+                <Typography
+                  variant="body1"
+                  component="p"
+                  sx={{ textAlign: "center", mb: 3, color: "white", fontSize: "0.9rem" }}
+                >
+                  Conversión actual: ${conversionRate} = 1 punto
                 </Typography>
                 <DataGrid
                   initialState={{

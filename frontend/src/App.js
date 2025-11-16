@@ -15,6 +15,7 @@ import Goals from "./screens/Goals";
 import ClientHome from "./screens/ClientHome";
 import ClientProducts from "./screens/ClientProducts";
 import MyOrders from "./screens/MyOrders";
+import Settings from "./screens/Settings";
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
           <Route path="/client-home" element={<ClientHome />} />
           <Route path="/client-products" element={<ClientProducts />} />
           <Route path="/my-orders" element={<MyOrders />} />
+          <Route path="/settings" element={<Settings />} />
         </Routes>
       </BrowserRouter>
     </div>
