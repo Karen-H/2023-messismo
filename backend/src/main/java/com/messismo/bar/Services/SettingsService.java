@@ -6,6 +6,8 @@ import com.messismo.bar.Repositories.SettingsRepository;
 import com.messismo.bar.Repositories.SettingsHistoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import jakarta.annotation.PostConstruct;
 import java.util.List;
 
@@ -55,7 +57,7 @@ public class SettingsService {
                 key, 
                 oldValue, 
                 value, 
-                "ADMIN", // TODO: obtener usuario actual del contexto de seguridad
+                getCurrentUserEmail(),
                 description != null ? description : setting.getDescription()
             );
             settingsHistoryRepository.save(history);
@@ -94,6 +96,19 @@ public class SettingsService {
             String.valueOf(rate),
             "Cantidad en pesos necesaria para obtener 1 punto de fidelidad"
         );
+    }
+    
+    // Método helper para obtener el email del usuario actual
+    private String getCurrentUserEmail() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getName() != null) {
+                return authentication.getName(); // El nombre es el email en nuestro sistema
+            }
+        } catch (Exception e) {
+            // En caso de error, usar fallback
+        }
+        return "SYSTEM";
     }
     
     // Método para obtener el historial de un setting

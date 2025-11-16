@@ -5,6 +5,8 @@ import Navbar from "../components/Navbar";
 import { Navigate } from "react-router-dom";
 import CircularProgress from '@mui/material/CircularProgress';
 import { Box, Typography } from '@mui/material';
+import { DataGrid } from "@mui/x-data-grid";
+import moment from "moment";
 
 const Container = styled.div`
   display: flex;
@@ -143,6 +145,7 @@ const Settings = () => {
     setVisible(true);
     if (currentUser && currentUser.access_token) {
       fetchCurrentRate();
+      fetchHistory();
     } else {
       setLoading(false);
     }
@@ -173,7 +176,7 @@ const Settings = () => {
         setNewRate("100");
         setMessage({ 
           type: 'error', 
-          text: `Error ${response.status}: ${response.statusText}. Mostrando valores por defecto.` 
+          text: `Error ${response.status}: ${response.statusText}. Showing default values.` 
         });
       }
     } catch (error) {
@@ -181,9 +184,31 @@ const Settings = () => {
       // Usar valores por defecto si hay error de conexión
       setCurrentRate(100);
       setNewRate("100");
-      setMessage({ type: 'error', text: 'Error de conexión al servidor. Mostrando valores por defecto.' });
+      setMessage({ type: 'error', text: 'Server connection error. Showing default values.' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchHistory = async () => {
+    if (!currentUser || !currentUser.access_token) {
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:8080/settings/points_conversion_rate/history", {
+        headers: {
+          "Authorization": "Bearer " + currentUser.access_token,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (response.ok) {
+        const historyData = await response.json();
+        setHistory(historyData);
+      }
+    } catch (error) {
+      console.error("Error fetching history:", error);
     }
   };
 
@@ -191,7 +216,7 @@ const Settings = () => {
     const rate = parseFloat(newRate);
     
     if (!rate || rate <= 0) {
-      setMessage({ type: 'error', text: 'Por favor ingresa un valor válido mayor a 0' });
+      setMessage({ type: 'error', text: 'Please enter a valid value greater than 0' });
       return;
     }
 
@@ -212,16 +237,15 @@ const Settings = () => {
 
       if (response.ok) {
         setCurrentRate(rate);
-        setMessage({ 
-          type: 'success', 
-          text: `Tasa de conversión actualizada correctamente a $${rate} = 1 punto` 
-        });
+        setMessage(null);
+        // Recargar historial después de actualización exitosa
+        fetchHistory();
       } else {
-        setMessage({ type: 'error', text: 'Error al actualizar la configuración' });
+        setMessage({ type: 'error', text: 'Error updating configuration' });
       }
     } catch (error) {
       console.error("Error updating rate:", error);
-      setMessage({ type: 'error', text: 'Error de conexión al servidor' });
+      setMessage({ type: 'error', text: 'Server connection error' });
     } finally {
       setUpdating(false);
     }
@@ -263,94 +287,243 @@ const Settings = () => {
     );
   }
 
+  // Configuración de columnas para la tabla de historial
+  const historyColumns = [
+    {
+      field: "changedAt",
+      headerName: "Date",
+      flex: 1,
+      align: "center",
+      headerAlign: "center",
+      minWidth: 150,
+      renderCell: (params) =>
+        moment(params.row.changedAt).format("YYYY-MM-DD HH:mm:ss"),
+    },
+    {
+      field: "changedBy",
+      headerName: "User",
+      flex: 1,
+      align: "center",
+      headerAlign: "center",
+      minWidth: 150,
+    },
+    {
+      field: "oldValue",
+      headerName: "Previous Value",
+      flex: 1,
+      align: "center",
+      headerAlign: "center",
+      minWidth: 120,
+      renderCell: (params) => `$${params.value}`,
+    },
+    {
+      field: "newValue",
+      headerName: "New Value",
+      flex: 1,
+      align: "center",
+      headerAlign: "center",
+      minWidth: 120,
+      renderCell: (params) => `$${params.value}`,
+    },
+  ];
+
+  // Preparar datos para la tabla
+  const historyRows = history.map((item, index) => ({
+    id: index + 1,
+    ...item
+  }));
+
   return (
     <Container>
       <Navbar />
       <MainContent visible={visible}>
-        <Box sx={{ width: '100%', margin: 'auto', padding: '1rem' }}>
-          <Typography variant="h4" component="h1" sx={{ mb: 3, color: '#333', fontFamily: 'Roboto' }}>
-            Configuración del Sistema
-          </Typography>
+        <Typography
+          variant="h3"
+          component="h3"
+          sx={{ textAlign: "center", mt: 3, mb: 3, color: "white" }}
+        >
+          Settings
+        </Typography>
         
-        <SettingsCard>
-          <SettingTitle>Conversión de Puntos de Fidelidad</SettingTitle>
-          <SettingDescription>
-            Configura la cantidad de pesos necesaria para que un cliente obtenga 1 punto de fidelidad.
-          </SettingDescription>
+        <Box sx={{ width: "100%", mb: 3, mt: 6 }}>
+          <Typography
+            variant="h4"
+            component="h4"
+            sx={{ textAlign: "center", mb: 2, color: "#a4d4cc" }}
+          >
+            Loyalty Points Conversion
+          </Typography>
+
           
-          <CurrentValue>
-            <strong>Configuración actual: ${currentRate} = 1 punto</strong>
-            <div style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: '#666' }}>
-              Ejemplo: Una orden de $500 = {(500 / currentRate).toFixed(2)} puntos
-            </div>
-          </CurrentValue>
+          <Box sx={{ 
+            textAlign: 'center', 
+            mb: 6, 
+            p: 2, 
+            border: '2px solid #a4d4cc', 
+            borderRadius: '8px',
+            maxWidth: '400px',
+            margin: '0 auto 48px auto'
+          }}>
+            <Typography variant="h6" sx={{ color: '#a4d4cc', fontWeight: 'bold' }}>
+              Current setting: ${currentRate} = 1 point
+            </Typography>
+          </Box>
 
           {message && (
-            <Message type={message.type}>
+            <Box 
+              sx={{ 
+                p: 2, 
+                mb: 2, 
+                borderRadius: '8px',
+                backgroundColor: message.type === 'success' ? '#28a745' : '#dc3545',
+                color: 'white',
+                textAlign: 'center'
+              }}
+            >
               {message.text}
-            </Message>
+            </Box>
           )}
 
-          <InputGroup>
-            <Label>Nueva tasa:</Label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span>$</span>
-              <Input
+          <Box sx={{ mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+              <Typography sx={{ color: 'white' }}>$</Typography>
+              <input
                 type="text"
                 value={newRate}
                 onChange={handleInputChange}
                 placeholder="100"
                 disabled={updating}
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: '4px',
+                  border: '2px solid #a4d4cc',
+                  backgroundColor: 'transparent',
+                  color: 'white',
+                  fontSize: '1rem',
+                  width: '100px',
+                  textAlign: 'center'
+                }}
               />
-              <span>= 1 punto</span>
-            </div>
-          </InputGroup>
+              <Typography sx={{ color: 'white' }}>= 1 point</Typography>
+            </Box>
+          </Box>
 
-          <Button onClick={updateRate} disabled={updating || !newRate}>
-            {updating ? 'Actualizando...' : 'Actualizar Configuración'}
-          </Button>
-        </SettingsCard>
+          <Box sx={{ textAlign: 'center', mb: 6 }}>
+            <button
+              onClick={updateRate} 
+              disabled={updating || !newRate}
+              style={{
+                display: 'block',
+                fontSize: '1.2rem',
+                borderRadius: '3px',
+                padding: '1rem 3.5rem',
+                margin: 'auto',
+                border: '1px solid black',
+                backgroundColor: updating || !newRate ? '#666' : '#a4d4cc',
+                color: 'black',
+                textTransform: 'uppercase',
+                cursor: updating || !newRate ? 'not-allowed' : 'pointer',
+                letterSpacing: '1px',
+                boxShadow: '0 3px #999',
+                fontFamily: '"Roboto", serif',
+                textAlign: 'center'
+              }}
+            >
+              {updating ? 'Updating...' : 'UPDATE'}
+            </button>
+          </Box>
+        </Box>
 
-        <SettingsCard>
-          <SettingTitle>Historial de Configuraciones</SettingTitle>
-          <SettingDescription>
-            Cambios recientes en la configuración del sistema.
-          </SettingDescription>
+        <Box sx={{ width: "100%" }}>
+          <Typography
+            variant="h4"
+            component="h4"
+            sx={{ textAlign: "center", mb: 3, color: "#a4d4cc" }}
+          >
+            Conversion History
+          </Typography>
           
-          <div style={{ marginTop: '1rem' }}>
-            <div style={{ 
-              padding: '0.75rem', 
-              borderLeft: '4px solid #007bff', 
-              backgroundColor: '#f8f9fa', 
-              marginBottom: '0.5rem' 
-            }}>
-              <div style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#333' }}>
-                Configuración Actual
-              </div>
-              <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.25rem' }}>
-                Tasa: ${currentRate} = 1 punto | Configurado al inicializar el sistema
-              </div>
-            </div>
-            
-            <div style={{ 
-              padding: '0.75rem', 
-              borderLeft: '4px solid #28a745', 
-              backgroundColor: '#f8f9fa', 
-              marginBottom: '0.5rem',
-              opacity: message?.type === 'success' ? 1 : 0.5
-            }}>
-              <div style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#333' }}>
-                {message?.type === 'success' ? 'Último Cambio' : 'Sin Cambios Recientes'}
-              </div>
-              <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.25rem' }}>
-                {message?.type === 'success' 
-                  ? `Nueva tasa configurada: $${newRate} = 1 punto`
-                  : 'No se han realizado cambios en esta sesión'
-                }
-              </div>
-            </div>
-          </div>
-        </SettingsCard>
+          <Box sx={{ height: 400, width: "100%", mt: 2 }}>
+            {history.length === 0 ? (
+              <Box 
+                display="flex" 
+                justifyContent="center" 
+                alignItems="center" 
+                height="100%" 
+                sx={{ 
+                  border: '2px dashed #a4d4cc',
+                  borderRadius: '8px',
+                  padding: '2rem'
+                }}
+              >
+                <Typography variant="body1" sx={{ color: 'white' }}>
+                  No changes recorded
+                </Typography>
+              </Box>
+            ) : (
+              <DataGrid
+                rows={historyRows}
+                columns={historyColumns}
+                initialState={{
+                  pagination: { paginationModel: { pageSize: 5 } },
+                  sorting: {
+                    sortModel: [{ field: "changedAt", sort: "desc" }],
+                  },
+                }}
+                pageSizeOptions={[5, 10, 25]}
+                autoHeight={true}
+                sx={{
+                  fontSize: "1rem",
+                  border: 2,
+                  borderColor: "#a4d4cc",
+                  "& .MuiButtonBase-root": {
+                    color: "white",
+                  },
+                  "& .MuiDataGrid-cell:hover": {
+                    color: "#a4d4cc",
+                  },
+                  ".MuiDataGrid-columnSeparator": {
+                    display: "none",
+                  },
+                  color: "white",
+                  fontFamily: "Roboto",
+                  fontSize: "1.1rem",
+                  ".MuiTablePagination-displayedRows": {
+                    color: "white",
+                    fontSize: "1.2rem",
+                  },
+                  ".MuiTablePagination-selectLabel": {
+                    color: "white",
+                    fontSize: "1.2rem",
+                  },
+                  "& .MuiSelect-select.MuiSelect-select": {
+                    color: "white",
+                    fontSize: "1.2rem",
+                    marginTop: "0.7rem",
+                  },
+                  ".MuiDataGrid-sortIcon": {
+                    opacity: "inherit !important",
+                    color: "white",
+                  },
+                  "& .MuiDataGrid-cell:focus": {
+                    outline: "none",
+                  },
+                  "@media (max-width: 1000px)": {
+                    fontSize: "1rem",
+                  },
+                  "@media (max-width: 760px)": {
+                    fontSize: "1rem",
+                  },
+                  "@media (max-width: 600px)": {
+                    fontSize: "1rem",
+                  },
+                  "@media (max-width: 535px)": {
+                    fontSize: "1.2rem",
+                  },
+                }}
+              />
+            )}
+          </Box>
         </Box>
       </MainContent>
     </Container>

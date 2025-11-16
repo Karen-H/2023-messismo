@@ -28,10 +28,19 @@ const getClientOrders = () => {
   });
 };
 
+const getAllClients = () => {
+  return axios.get(apiUrl + "/settings/clients", { 
+    headers: authHeader(),
+    method: "GET",
+    "Content-Type": "application/json" 
+  });
+};
+
 const clientService = {
   getProducts,
   getProfile,
-  getClientOrders
+  getClientOrders,
+  getAllClients
 };
 
 export default clientService;

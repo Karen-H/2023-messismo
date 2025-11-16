@@ -2,7 +2,9 @@ package com.messismo.bar.Controllers;
 
 import com.messismo.bar.Entities.Settings;
 import com.messismo.bar.Services.SettingsService;
+import com.messismo.bar.Services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +19,9 @@ public class SettingsController {
     @Autowired
     private SettingsService settingsService;
 
+    @Autowired
+    private UserService userService;
+
     // Obtener todas las configuraciones (solo ADMIN/MANAGER)
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
@@ -27,7 +32,7 @@ public class SettingsController {
 
     // Obtener la tasa de conversión de puntos (cualquier usuario autenticado puede verla)
     @GetMapping("/points-conversion")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('EMPLOYEE') or hasRole('CLIENT')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('VALIDATEDEMPLOYEE') or hasRole('CLIENT')")
     public ResponseEntity<Map<String, Object>> getPointsConversionRate() {
         double rate = settingsService.getPointsConversionRate();
         return ResponseEntity.ok(Map.of(
@@ -81,6 +86,13 @@ public class SettingsController {
         
         Settings savedSetting = settingsService.saveSetting(key, value, description);
         return ResponseEntity.ok(savedSetting);
+    }
+
+    // Obtener lista de clientes (accesible para VALIDATEDEMPLOYEE)
+    @GetMapping("/clients")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('VALIDATEDEMPLOYEE')")
+    public ResponseEntity<?> getClients() {
+        return ResponseEntity.status(HttpStatus.OK).body(userService.getAllClients());
     }
     
     // Obtener historial de cambios de una configuración (solo ADMIN/MANAGER)

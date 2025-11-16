@@ -570,7 +570,7 @@ function Orders() {
                       component="p"
                       sx={{ textAlign: "center", mb: 3, color: "white", fontSize: "0.9rem" }}
                     >
-                      Conversión actual: ${conversionRate} = 1 punto
+                      Current conversion: ${conversionRate} = 1 point
                     </Typography>
                     <DataGrid
                       initialState={{

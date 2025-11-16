@@ -6,6 +6,7 @@ import { RiDeleteBinLine } from "react-icons/ri";
 import productsService from "../services/products.service";
 import ordersService from "../services/orders.service";
 import employeeService from "../services/employees.service";
+import clientService from "../services/client.service";
 import { useSelector } from "react-redux";
 import { propsToClassKey } from "@mui/styles";
 import EditOrderForm from "./EditOrderForm";
@@ -370,7 +371,7 @@ const ModifyForm = ({ onCancel, orderId, orderDetails, totalPrice }) => {
     const [error, setError] = useState("");
 
     useEffect(() => {
-        employeeService.getAllClients()
+        clientService.getAllClients()
             .then((response) => {
                 setClients(response.data);
             })

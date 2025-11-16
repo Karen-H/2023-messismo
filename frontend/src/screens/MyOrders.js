@@ -362,7 +362,7 @@ function MyOrders() {
                   component="p"
                   sx={{ textAlign: "center", mb: 3, color: "white", fontSize: "0.9rem" }}
                 >
-                  Conversión actual: ${conversionRate} = 1 punto
+                  Current conversion: ${conversionRate} = 1 point
                 </Typography>
                 <DataGrid
                   initialState={{
@@ -430,11 +430,8 @@ function MyOrders() {
                     "@media (max-width: 535px)": {
                       fontSize: "1.2rem",
                     },
-                    "@media (max-width: 435px)": {
-                      fontSize: "1rem",
-                    },
-                    "@media (max-width: 335px)": {
-                      fontSize: "0.8rem",
+                    "@media (max-width: 535px)": {
+                      fontSize: "1.2rem",
                     },
                   }}
                 />
