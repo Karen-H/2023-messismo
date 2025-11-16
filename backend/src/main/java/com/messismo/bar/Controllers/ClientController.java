@@ -2,6 +2,8 @@ package com.messismo.bar.Controllers;
 
 import com.messismo.bar.DTOs.ClientProfileDTO;
 import com.messismo.bar.DTOs.ProductClientViewDTO;
+import com.messismo.bar.Services.OrderService;
+import com.messismo.bar.Services.PointsService;
 import com.messismo.bar.Services.ProductService;
 import com.messismo.bar.Services.UserService;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -23,6 +26,8 @@ public class ClientController {
 
     private final ProductService productService;
     private final UserService userService;
+    private final OrderService orderService;
+    private final PointsService pointsService;
 
     @GetMapping("/products")
     public ResponseEntity<?> getProductsForClient() {
@@ -52,6 +57,39 @@ public class ClientController {
             return ResponseEntity.status(HttpStatus.OK).body(profile);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving profile");
+        }
+    }
+
+    @GetMapping("/orders")
+    public ResponseEntity<?> getClientOrders(Authentication authentication) {
+        try {
+            String email = authentication.getName();
+            return ResponseEntity.status(HttpStatus.OK).body(orderService.getOrdersByClientEmail(email));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving client orders");
+        }
+    }
+
+    @GetMapping("/points")
+    public ResponseEntity<?> getClientPoints(Authentication authentication) {
+        try {
+            String email = authentication.getName();
+            ClientProfileDTO profile = userService.getClientProfile(email);
+            Double currentBalance = pointsService.getCurrentBalance(profile.getClientId());
+            return ResponseEntity.status(HttpStatus.OK).body(Map.of("currentBalance", currentBalance));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving client points");
+        }
+    }
+
+    @GetMapping("/points/history")
+    public ResponseEntity<?> getPointsHistory(Authentication authentication) {
+        try {
+            String email = authentication.getName();
+            ClientProfileDTO profile = userService.getClientProfile(email);
+            return ResponseEntity.status(HttpStatus.OK).body(pointsService.getTransactionHistory(profile.getClientId()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving points history");
         }
     }
 }

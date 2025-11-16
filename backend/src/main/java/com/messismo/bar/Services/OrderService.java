@@ -20,6 +20,8 @@ public class OrderService {
     private final UserRepository userRepository;
 
     private final ProductOrderRepository productOrderRepository;
+    
+    private final PointsService pointsService;
 
     public String addNewOrder(OrderRequestDTO orderRequestDTO) throws Exception {
         try {
@@ -68,6 +70,16 @@ public class OrderService {
             
             order.close();
             Order savedOrder = orderRepository.save(order);
+            
+            // Añadir puntos si la orden tiene clientId asignado
+            if (savedOrder.getClientId() != null) {
+                pointsService.addPointsForOrder(
+                    String.valueOf(savedOrder.getClientId()), 
+                    savedOrder.getTotalPrice(), 
+                    savedOrder.getId()
+                );
+            }
+            
             return "Order closed successfully";
         } catch (OrderNotFoundException | ClientIdNotFoundException e) {
             throw e;
@@ -126,5 +138,18 @@ public class OrderService {
             }
         }
         return NewProductOrderListDTO.builder().productOrderList(productOrderList).totalCost(totalCost).totalPrice(totalPrice).build();
+    }
+
+    public List<Order> getOrdersByClientEmail(String email) throws Exception {
+        try {
+            // Obtener el usuario por email
+            User client = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Client not found"));
+            
+            // Obtener órdenes por clientId
+            return orderRepository.findByClientId(Long.parseLong(client.getClientId()));
+        } catch (Exception e) {
+            throw new Exception("Error retrieving client orders: " + e.getMessage());
+        }
     }
 }

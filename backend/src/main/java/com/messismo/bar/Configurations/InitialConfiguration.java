@@ -22,7 +22,7 @@ import java.util.List;
 public class InitialConfiguration {
 
     @Bean
-    public CommandLineRunner commandLineRunner(AuthenticationService authenticationService, UserRepository userRepository, ProductService productService, CategoryService categoryService, OrderService orderService, OrderRepository orderRepository, ProductRepository productRepository, GoalService goalService) {
+    public CommandLineRunner commandLineRunner(AuthenticationService authenticationService, UserRepository userRepository, ProductService productService, CategoryService categoryService, OrderService orderService, OrderRepository orderRepository, ProductRepository productRepository, GoalService goalService, PointsService pointsService) {
         return args -> {
             RegisterRequestDTO admin = new RegisterRequestDTO();
             admin.setUsername("admin");
@@ -49,6 +49,8 @@ public class InitialConfiguration {
             System.out.println("ADDED GOALS");
             addOrdersWithClientIds(orderService, userRepository, productRepository, orderRepository);
             System.out.println("ADDED ORDERS WITH CLIENT IDS");
+            migrateExistingClientPoints(userRepository, orderRepository, pointsService);
+            System.out.println("MIGRATED EXISTING CLIENT POINTS");
             System.out.println("FINISH INITIAL LOADING");
         };
     }
@@ -359,17 +361,50 @@ public class InitialConfiguration {
             List.of(ProductOrderDTO.builder().product(productRepository.findByName("Italian Antipasto").get()).quantity(1).build(), 
                    ProductOrderDTO.builder().product(productRepository.findByName("Caesar Salad").get()).quantity(1).build()));
 
-        // Obtener las últimas 5 órdenes creadas y cerrarlas con clientId
+        // Obtener las últimas 20 órdenes creadas y cerrarlas con clientId
         List<Order> allOrders = orderRepository.findAll();
-        List<Order> lastOrders = allOrders.subList(Math.max(0, allOrders.size() - 5), allOrders.size());
+        List<Order> lastOrders = allOrders.subList(Math.max(0, allOrders.size() - 20), allOrders.size());
         
-        Long[] clientIds = {mariaClientId, carlosClientId, anaClientId, diegoClientId, sofiaClientId};
+        Long[] clientIds = {mariaClientId, carlosClientId, anaClientId, diegoClientId, sofiaClientId, 
+        mariaClientId, carlosClientId, anaClientId, diegoClientId, sofiaClientId,
+        mariaClientId, carlosClientId, anaClientId, diegoClientId, sofiaClientId,
+        mariaClientId, carlosClientId, anaClientId, diegoClientId, sofiaClientId};
         
         for (int i = 0; i < lastOrders.size(); i++) {
             Order order = lastOrders.get(i);
             order.setClientId(clientIds[i]);
-            order.close();
+            order.setStatus("Closed");
             orderRepository.save(order);
+        }
+    }
+
+    private void migrateExistingClientPoints(UserRepository userRepository, OrderRepository orderRepository, PointsService pointsService) {
+        // Obtener todos los clientes
+        List<User> clients = userRepository.findAll().stream()
+            .filter(User::isClient)
+            .toList();
+        
+        for (User client : clients) {
+            try {
+                // Crear cuenta de puntos si no existe
+                if (pointsService.getPointsAccount(client.getClientId()).isEmpty()) {
+                    pointsService.createPointsAccount(client.getClientId());
+                }
+                
+                // Calcular puntos de órdenes cerradas existentes
+                List<Order> clientOrders = orderRepository.findByClientId(Long.parseLong(client.getClientId()));
+                Double totalPoints = clientOrders.stream()
+                    .filter(order -> "Closed".equals(order.getStatus()))
+                    .mapToDouble(order -> order.getTotalPrice() / 100.0)
+                    .sum();
+                
+                if (totalPoints > 0) {
+                    pointsService.migrateExistingPoints(client.getClientId(), totalPoints);
+                    System.out.println("Migrated " + totalPoints + " points for client " + client.getClientId());
+                }
+            } catch (Exception e) {
+                System.err.println("Error migrating points for client " + client.getClientId() + ": " + e.getMessage());
+            }
         }
     }
 

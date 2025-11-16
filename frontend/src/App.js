@@ -14,6 +14,7 @@ import Dashboard from "./screens/Dashboard";
 import Goals from "./screens/Goals";
 import ClientHome from "./screens/ClientHome";
 import ClientProducts from "./screens/ClientProducts";
+import MyOrders from "./screens/MyOrders";
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
           <Route path="/categories" element={<Categories />} />
           <Route path="/client-home" element={<ClientHome />} />
           <Route path="/client-products" element={<ClientProducts />} />
+          <Route path="/my-orders" element={<MyOrders />} />
         </Routes>
       </BrowserRouter>
     </div>

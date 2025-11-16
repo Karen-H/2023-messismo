@@ -221,6 +221,14 @@ function Navbar() {
                     </NavLink>
                 )}
 
+                {/* My Orders - Solo para clientes */}
+                {showClientBoard && (
+                    <NavLink to={'/my-orders'} onClick={clicked ? handleClick : undefined}>
+                        <HiShoppingBag className='icon'/>
+                        <span>My Orders</span>
+                    </NavLink>
+                )}
+
                 {/* Orders - Solo para empleados */}
                 {(showManagerBoard || showAdminBoard || showValidatedEmployeeBoard) && (
                     <NavLink to={'/orders'} onClick={clicked ? handleClick : undefined}>

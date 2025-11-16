@@ -20,9 +20,18 @@ const getProfile = () => {
   });
 };
 
+const getClientOrders = () => {
+  return axios.get(API_URL + "/orders", { 
+    headers: authHeader(),
+    method: "GET",
+    "Content-Type": "application/json" 
+  });
+};
+
 const clientService = {
   getProducts,
-  getProfile
+  getProfile,
+  getClientOrders
 };
 
 export default clientService;

@@ -31,6 +31,8 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     
     private final ClientIdService clientIdService;
+    
+    private final PointsService pointsService;
 
     public AuthenticationResponseDTO register(RegisterRequestDTO request) throws Exception {
         try {
@@ -52,6 +54,11 @@ public class AuthenticationService {
                 }
                 
                 userRepository.save(newUser);
+                
+                // Crear cuenta de puntos si es cliente
+                if ("CLIENT".equals(request.getUserType())) {
+                    pointsService.createPointsAccount(newUser.getClientId());
+                }
                 String jwtToken = jwtService.generateToken(newUser);
                 String refreshToken = jwtService.generateRefreshToken(newUser);
                 saveUserToken(newUser, jwtToken);
