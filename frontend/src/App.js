@@ -16,6 +16,7 @@ import ClientHome from "./screens/ClientHome";
 import ClientProducts from "./screens/ClientProducts";
 import MyOrders from "./screens/MyOrders";
 import Settings from "./screens/Settings";
+import Benefits from "./screens/Benefits";
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
           <Route path="/client-products" element={<ClientProducts />} />
           <Route path="/my-orders" element={<MyOrders />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/benefits" element={<Benefits />} />
         </Routes>
       </BrowserRouter>
     </div>

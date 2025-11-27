@@ -7,6 +7,7 @@ import { ImExit } from 'react-icons/im'
 import { VscGraph } from 'react-icons/vsc'
 import { HiShoppingBag } from 'react-icons/hi2'
 import { GiStairsGoal } from 'react-icons/gi'
+import { MdCardGiftcard } from 'react-icons/md'
 import { styled } from 'styled-components'
 import { Link, useNavigate } from 'react-router-dom'
 import BurgerIcon from './BurgerIcon'
@@ -237,6 +238,12 @@ function Navbar() {
                         <span>Orders</span>
                     </NavLink>
                 )}
+
+                {/* Benefits - Accesible para todos los usuarios autenticados */}
+                <NavLink to={'/benefits'} onClick={clicked ? handleClick : undefined}>
+                    <MdCardGiftcard className='icon'/>
+                    <span>Benefits</span>
+                </NavLink>
 
                 {/* Users - Solo para Manager y Admin */}
                 {(showManagerBoard || showAdminBoard) && (
