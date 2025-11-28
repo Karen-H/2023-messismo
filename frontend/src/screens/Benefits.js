@@ -35,7 +35,7 @@ const Header = styled.div`
   gap: 1rem;
 `;
 
-// Title will be replaced with Typography component like Orders
+
 
 const StatsContainer = styled.div`
   display: grid;
@@ -205,7 +205,7 @@ function Benefits() {
     if (window.confirm("Are you sure you want to delete this benefit?")) {
       try {
         await benefitsService.deleteBenefit(benefitId);
-        loadBenefits(); // Recargar la lista
+        loadBenefits();
       } catch (error) {
         console.error("Error deleting benefit:", error);
       }
@@ -214,7 +214,7 @@ function Benefits() {
 
   const handleCreateBenefit = () => {
     setOpenCreateDialog(false);
-    loadBenefits(); // Recargar la lista
+    loadBenefits();
   };
 
   const filteredBenefits = benefits.filter(benefit => {
@@ -393,7 +393,7 @@ function Benefits() {
                   <div style={{ marginBottom: '1rem' }}>
                     <Typography variant="body1" style={{ fontWeight: 'bold', color: '#4caf50' }}>
                       {benefit.productIds && benefit.productIds.length > 0
-                        ? `Product: ${products.find(p => p.id === benefit.productIds[0])?.name || 'Unknown'}`
+                        ? `Product: ${products.find(p => p.productId === parseInt(benefit.productIds[0]))?.name || 'Unknown'}`
                         : 'Free Product'
                       }
                     </Typography>

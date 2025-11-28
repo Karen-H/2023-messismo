@@ -318,8 +318,6 @@ const OrderForm = ({ onCancel }) => {
                 return null;
             }
         }).filter(product => product !== null);
-
-        // This section was duplicated, removed to clean up code
     };
 
     const totalCost = orderedProducts.reduce((total, product) => {

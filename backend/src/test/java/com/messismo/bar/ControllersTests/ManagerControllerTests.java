@@ -599,7 +599,6 @@ public class ManagerControllerTests {
         goalDTO.setEndingDate(endingDate);
         goalDTO.setObjectType("Category");
         goalDTO.setGoalObjective(500.0);
-        System.out.println("HOLA " + goalDTO);
         ResponseEntity<String> response = managerController.addGoal(goalDTO);
 
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());

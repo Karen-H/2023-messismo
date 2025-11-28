@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import "../Users.css";
 import { useSelector, useDispatch } from "react-redux";
-// import { acceptUser, rejectUser, deleteUser } from '../redux/userSlice';
 import { validateUser, upgradeUser } from "../redux/userSlice";
 import Navbar from "../components/Navbar";
 import userService from "../services/user.service";
@@ -247,14 +246,6 @@ function Users() {
   const isAdminOrManager = currentUser && (currentUser.role === "MANAGER" || currentUser.role === "ADMIN");
 
   const contentVisible = !clicked;
-
-  // const handleReject = (id) => {
-  //     dispatch(rejectUser(id))
-  // };
-
-  // const handleDelete = (id) => {
-  //     dispatch(deleteUser(id))
-  // };
 
   if (!currentUser) {
     return <Navigate to="/" />;

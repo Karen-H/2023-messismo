@@ -1,7 +1,6 @@
 import React, { useState, useEffect, forwardRef } from "react";
 import "../App.css";
 import { styled } from "styled-components";
-// import 'fontsource-roboto';
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import SUpPopUp from "../components/SignUpPopUp";

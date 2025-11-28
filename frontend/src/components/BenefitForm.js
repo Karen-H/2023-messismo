@@ -73,7 +73,6 @@ function BenefitForm({ onSubmit, onCancel }) {
   const loadProductsAndCategories = async () => {
     try {
       const productsResponse = await productsService.getAllProducts();
-      console.log('Products loaded:', productsResponse.data);
       setProducts(productsResponse.data || []);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -92,16 +91,9 @@ function BenefitForm({ onSubmit, onCancel }) {
 
 
   const handleChange = (field, value) => {
-    console.log('HandleChange called:', field, '=', value, typeof value);
-    
     setFormData(prevData => {
       const newData = { ...prevData };
       newData[field] = value;
-      
-
-      
-      console.log('Previous formData:', prevData);
-      console.log('New formData:', newData);
       return newData;
     });
     
@@ -298,16 +290,13 @@ function BenefitForm({ onSubmit, onCancel }) {
             </Typography>
                 <select
                   value={formData.selectedProductId || ''}
-                  onChange={(e) => {
-                    console.log('Product selected:', e.target.value);
-                    handleChange('selectedProductId', e.target.value);
-                  }}
+                  onChange={(e) => handleChange('selectedProductId', e.target.value)}
                   style={{ width: '80%', marginBottom: '1rem', padding: '8px', fontSize: '14px' }}
                 >
                   <option value="">Select a product</option>
-                  {products.map((product) => (
-                    <option key={`product-${product.id}`} value={product.id}>
-                      {product.name} - ${product.price}
+                  {products.filter(product => product && product.productId).map((product) => (
+                    <option key={`product-${product.productId}`} value={product.productId}>
+                      {product.name} - ${product.unitPrice}
                     </option>
                   ))}
                 </select>

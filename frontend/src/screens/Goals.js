@@ -307,7 +307,6 @@ function Goals() {
         setGoals(goalsData);
         setInitialRows(goalsData.length > 0 ? [goalsData[goalsData.length-1]] : []);
         setIsLoading(false);
-        console.log("done");
       })
       .catch((error) => {
         console.error("Error al mostrar las metas", error);
@@ -382,7 +381,6 @@ function Goals() {
         .then((response) => {
           setGoals(response.data);
           setIsLoading(false);
-          console.log("done");
         })
         .catch((error) => {
           console.error("Error al mostrar las metas", error);
@@ -393,7 +391,6 @@ function Goals() {
         
       } catch (error) {
         if (error.response) {
-          console.log("Datos de respuesta del error:", error.response.data);
           setAlertText("Failed to delete goal: " + error.response.data);
         }
         setIsOperationSuccessful(false);

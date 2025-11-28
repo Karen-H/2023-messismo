@@ -274,7 +274,6 @@ function Orders() {
       .then((response) => {
         setOrders(response.data);
         setIsLoading(false);
-        console.log("done");
       })
       .catch((error) => {
         console.error("Error al mostrar las ordenes", error);
@@ -416,7 +415,6 @@ function Orders() {
       sortable: false,
       renderCell: (params) => (
         <VisibilityIcon onClick={() => handleViewDetails(params.row.id)} />
-        //<MoreDetails onClick={() => handleViewDetails(params.row.id)} />
       ),
     },
     {
@@ -447,7 +445,6 @@ function Orders() {
           color: fontColor,
           textAlign: "center",
           padding: "8px",
-          //borderRadius: '4px',
           fontSize: "0.9rem",
           textTransform: "none",
           width: "50%",
@@ -585,7 +582,6 @@ function Orders() {
                       rows={rows}
                       getRowId={(row) => row.id}
                       pageSizeOptions={[5, 10, 25]}
-                      //rowsPerPageOptions={[5, 10, 25]}
                       pagination
                       pageSize={pageSize}
                       onPageSizeChange={(newPageSize) =>
