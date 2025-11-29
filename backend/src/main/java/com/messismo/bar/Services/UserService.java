@@ -113,10 +113,14 @@ public class UserService implements UserDetailsService {
                 throw new Exception("User is not a client");
             }
             
+            // Obtener puntos del cliente
+            Double currentPoints = pointsService.getCurrentBalance(user.getClientId());
+            
             return ClientProfileDTO.builder()
                 .username(user.getFunctionalUsername())
                 .email(user.getEmail())
                 .clientId(user.getClientId())
+                .currentPoints(currentPoints)
                 .build();
         } catch (Exception e) {
             throw new Exception("Error retrieving client profile");

@@ -63,6 +63,8 @@ function BenefitForm({ onSubmit, onCancel }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isDuplicateWarning, setIsDuplicateWarning] = useState(false);
+  const [checkingDuplicate, setCheckingDuplicate] = useState(false);
 
   const daysOfWeek = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
   
@@ -90,6 +92,55 @@ function BenefitForm({ onSubmit, onCancel }) {
 
 
 
+  // Check for duplicate benefits
+  const checkForDuplicates = async (currentFormData) => {
+    // Only check if we have enough data to form a complete benefit
+    if (!currentFormData.type || !currentFormData.pointsRequired) {
+      setIsDuplicateWarning(false);
+      return;
+    }
+    
+    // For DISCOUNT benefits, need discount info
+    if (currentFormData.type === 'DISCOUNT' && 
+        (!currentFormData.discountType || !currentFormData.discountValue || currentFormData.applicableDays.length === 0)) {
+      setIsDuplicateWarning(false);
+      return;
+    }
+    
+    // For FREE_PRODUCT benefits, need product selection
+    if (currentFormData.type === 'FREE_PRODUCT' && 
+        (!currentFormData.selectedProductId || currentFormData.applicableDays.length === 0)) {
+      setIsDuplicateWarning(false);
+      return;
+    }
+
+    try {
+      setCheckingDuplicate(true);
+      
+      const checkData = {
+        type: currentFormData.type,
+        pointsRequired: parseInt(currentFormData.pointsRequired)
+      };
+      
+      if (currentFormData.type === 'DISCOUNT') {
+        checkData.discountType = currentFormData.discountType;
+        checkData.discountValue = parseFloat(currentFormData.discountValue);
+        checkData.applicableDays = currentFormData.applicableDays;
+      } else if (currentFormData.type === 'FREE_PRODUCT') {
+        checkData.applicableDays = currentFormData.applicableDays;
+        checkData.productIds = [parseInt(currentFormData.selectedProductId)];
+      }
+
+      const response = await benefitsService.checkDuplicateBenefit(checkData);
+      setIsDuplicateWarning(response.data === true);
+    } catch (error) {
+      console.error('Error checking duplicates:', error);
+      setIsDuplicateWarning(false);
+    } finally {
+      setCheckingDuplicate(false);
+    }
+  };
+
   const handleChange = (field, value) => {
     setFormData(prevData => {
       const newData = { ...prevData };
@@ -98,6 +149,12 @@ function BenefitForm({ onSubmit, onCancel }) {
     });
     
     setError('');
+    
+    // Check for duplicates after a short delay
+    setTimeout(() => {
+      const updatedData = { ...formData, [field]: value };
+      checkForDuplicates(updatedData);
+    }, 500);
   };
 
   const handleDayToggle = (day) => {
@@ -110,33 +167,33 @@ function BenefitForm({ onSubmit, onCancel }) {
 
   const validateForm = () => {
     if (!formData.type || !formData.pointsRequired) {
-      setError('Benefit type and required points are mandatory');
+      setError('All fields are mandatory');
       return false;
     }
 
     if (formData.pointsRequired <= 0) {
-      setError('Required points must be greater than 0');
+      setError('All fields are mandatory');
       return false;
     }
 
     if (formData.type === 'DISCOUNT') {
       if (!formData.discountType || !formData.discountValue || formData.applicableDays.length === 0) {
-        setError('For discounts: type, value and applicable days are required');
+        setError('All fields are mandatory');
         return false;
       }
       if (formData.discountValue <= 0) {
-        setError('Discount value must be greater than 0');
+        setError('All fields are mandatory');
         return false;
       }
     }
 
     if (formData.type === 'FREE_PRODUCT') {
       if (!formData.selectedProductId) {
-        setError('You must select a product');
+        setError('All fields are mandatory');
         return false;
       }
       if (formData.applicableDays.length === 0) {
-        setError('You must select at least one applicable day');
+        setError('All fields are mandatory');
         return false;
       }
     }
@@ -174,6 +231,8 @@ function BenefitForm({ onSubmit, onCancel }) {
       console.error('Error creating benefit:', error);
       if (error.response?.status === 403) {
         setError('Access denied. You need ADMIN or MANAGER role to create benefits.');
+      } else if (error.response?.status === 409) {
+        setError('A benefit with the exact same configuration already exists. Please modify at least one field (points, type, discount, or days).');
       } else {
         setError(error.response?.data?.message || 'Error creating benefit');
       }
@@ -197,16 +256,18 @@ function BenefitForm({ onSubmit, onCancel }) {
   return (
     <FormContainer>
       <form onSubmit={handleSubmit}>
-        {error && (
-          <Alert severity="error" style={{ marginBottom: '1rem' }}>
-            {error}
+        {checkingDuplicate && (
+          <Alert severity="info" style={{ marginBottom: '1rem' }}>
+            Verificando duplicados...
           </Alert>
         )}
+
+
 
         {/* Basic Information */}
         <SectionTitle variant="h6">Basic Information</SectionTitle>
         
-        <p style={{ color: 'black', fontWeight: 'bold' }}>Benefit Type *</p>
+        <p style={{ color: 'black', fontWeight: 'bold' }}>Benefit Type</p>
         <select
           value={formData.type || ''}
           onChange={(e) => handleChange('type', e.target.value)}
@@ -233,7 +294,7 @@ function BenefitForm({ onSubmit, onCancel }) {
             <Divider style={{ margin: '2rem 0 1rem 0' }} />
             <SectionTitle variant="h6">Discount Configuration</SectionTitle>
             
-            <p style={{ color: 'black', fontWeight: 'bold' }}>Discount Type *</p>
+            <p style={{ color: 'black', fontWeight: 'bold' }}>Discount Type</p>
             <select
               value={formData.discountType || ''}
               onChange={(e) => handleChange('discountType', e.target.value)}
@@ -328,6 +389,32 @@ function BenefitForm({ onSubmit, onCancel }) {
           </>
         )}
 
+        {/* Error message */}
+        {error && (
+          <div style={{ 
+            color: 'red', 
+            fontWeight: 'bold', 
+            marginTop: '1rem', 
+            marginBottom: '1rem',
+            fontSize: '14px'
+          }}>
+            {error}
+          </div>
+        )}
+
+        {/* Duplicate warning message */}
+        {isDuplicateWarning && (
+          <div style={{ 
+            color: 'red', 
+            fontWeight: 'bold', 
+            marginTop: '1rem', 
+            marginBottom: '1rem',
+            fontSize: '14px'
+          }}>
+            A benefit with this same configuration (points, type, discount, and days) already exists.
+          </div>
+        )}
+
         {/* Form Actions */}
         <Box display="flex" justifyContent="flex-end" style={{ marginTop: '2rem' }}>
           <CancelButton onClick={onCancel}>
@@ -336,7 +423,7 @@ function BenefitForm({ onSubmit, onCancel }) {
           <SubmitButton 
             type="submit" 
             variant="contained"
-            disabled={loading}
+            disabled={loading || isDuplicateWarning || checkingDuplicate}
           >
             {loading ? 'Creating...' : 'Create Benefit'}
           </SubmitButton>

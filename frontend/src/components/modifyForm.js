@@ -15,7 +15,7 @@ import CloseOrderForm from "./CloseOrderForm";
 
 const Form = styled.form`
   padding: 2rem;
-  background-color: rgb(164, 212, 204, 0.6);
+  background-color: ${props => props.showCloseForm ? 'transparent' : 'rgb(164, 212, 204, 0.6)'};
 
   .fail {
     color: red;
@@ -435,7 +435,7 @@ const handleCloseOrder = () => {
   return (
     <>
      {!isEditFormVisible && formVisible && (
-      <Form className="form-react">
+      <Form className="form-react" showCloseForm={closeOrderForm}>
         {!closeOrderForm ? (
           <Buttons>
             <Button type="button" className="placeorder" onClick={handleAddProductsOrder}>

@@ -4,6 +4,7 @@ import com.messismo.bar.DTOs.*;
 import com.messismo.bar.Entities.*;
 import com.messismo.bar.Repositories.*;
 import com.messismo.bar.Services.*;
+import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -23,7 +24,7 @@ import java.util.List;
 public class InitialConfiguration {
 
     @Bean
-    public CommandLineRunner commandLineRunner(AuthenticationService authenticationService, UserRepository userRepository, ProductService productService, CategoryService categoryService, OrderService orderService, OrderRepository orderRepository, ProductRepository productRepository, GoalService goalService, PointsService pointsService) {
+    public CommandLineRunner commandLineRunner(AuthenticationService authenticationService, UserRepository userRepository, ProductService productService, CategoryService categoryService, OrderService orderService, OrderRepository orderRepository, ProductRepository productRepository, GoalService goalService, PointsService pointsService, BenefitService benefitService) {
         return args -> {
             RegisterRequestDTO admin = new RegisterRequestDTO();
             admin.setUsername("admin");
@@ -42,6 +43,8 @@ public class InitialConfiguration {
             System.out.println("ADDED CATEGORIES");
             addSampleProducts(productService);
             System.out.println("ADDED PRODUCTS");
+            addSampleBenefits(benefitService, productRepository);
+            System.out.println("ADDED BENEFITS");
             addSampleOrders(orderService, productRepository);
             System.out.println("ADDED ORDERS");
             closeOrders(orderRepository);
@@ -466,6 +469,129 @@ public class InitialConfiguration {
         productService.addProduct(drink5);
         ProductDTO drink6 = ProductDTO.builder().name("Chinese Tea").description("Chinese tea with mint").category("Drink").unitPrice(5500.00).stock(150).unitCost(500.00).newCategory(false).build();
         productService.addProduct(drink6);
+    }
+
+    private void addSampleBenefits(BenefitService benefitService, ProductRepository productRepository) {
+        try {
+            // Monday: 100% off using 10 points
+            BenefitRequestDTO mondayDiscount = BenefitRequestDTO.builder()
+                    .type(Benefit.BenefitType.DISCOUNT)
+                    .pointsRequired(10)
+                    .discountType(Benefit.DiscountType.PERCENTAGE)
+                    .discountValue(100.0)
+                    .applicableDays(Arrays.asList("MONDAY"))
+                    .build();
+            benefitService.createBenefit(mondayDiscount);
+
+            // Thursday, Friday, Saturday and Sunday: 10% off using 100 points
+            BenefitRequestDTO weekendDiscount10 = BenefitRequestDTO.builder()
+                    .type(Benefit.BenefitType.DISCOUNT)
+                    .pointsRequired(100)
+                    .discountType(Benefit.DiscountType.PERCENTAGE)
+                    .discountValue(10.0)
+                    .applicableDays(Arrays.asList("THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"))
+                    .build();
+            benefitService.createBenefit(weekendDiscount10);
+
+            // Thursday and Friday: 20% off using 200 points
+            BenefitRequestDTO weekendDiscount20 = BenefitRequestDTO.builder()
+                    .type(Benefit.BenefitType.DISCOUNT)
+                    .pointsRequired(200)
+                    .discountType(Benefit.DiscountType.PERCENTAGE)
+                    .discountValue(20.0)
+                    .applicableDays(Arrays.asList("THURSDAY", "FRIDAY"))
+                    .build();
+            benefitService.createBenefit(weekendDiscount20);
+
+            // Monday and Tuesday: 30% off using 300 points
+            BenefitRequestDTO weekendDiscount30 = BenefitRequestDTO.builder()
+                    .type(Benefit.BenefitType.DISCOUNT)
+                    .pointsRequired(300)
+                    .discountType(Benefit.DiscountType.PERCENTAGE)
+                    .discountValue(30.0)
+                    .applicableDays(Arrays.asList("MONDAY", "TUESDAY"))
+                    .build();
+            benefitService.createBenefit(weekendDiscount30);
+
+            // Tuesday and Wednesday: $5000 off using 50 points
+            BenefitRequestDTO midweekDiscount = BenefitRequestDTO.builder()
+                    .type(Benefit.BenefitType.DISCOUNT)
+                    .pointsRequired(50)
+                    .discountType(Benefit.DiscountType.FIXED_AMOUNT)
+                    .discountValue(5000.0)
+                    .applicableDays(Arrays.asList("TUESDAY", "WEDNESDAY"))
+                    .build();
+            benefitService.createBenefit(midweekDiscount);
+
+            // Monday to Thursday: $1000 off using 1000 points
+            BenefitRequestDTO fixedDiscount1000 = BenefitRequestDTO.builder()
+                    .type(Benefit.BenefitType.DISCOUNT)
+                    .pointsRequired(1000)
+                    .discountType(Benefit.DiscountType.FIXED_AMOUNT)
+                    .discountValue(1000.0)
+                    .applicableDays(Arrays.asList("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY"))
+                    .build();
+            benefitService.createBenefit(fixedDiscount1000);
+
+            // Monday to Thursday: $2000 off using 2000 points
+            BenefitRequestDTO fixedDiscount2000 = BenefitRequestDTO.builder()
+                    .type(Benefit.BenefitType.DISCOUNT)
+                    .pointsRequired(2000)
+                    .discountType(Benefit.DiscountType.FIXED_AMOUNT)
+                    .discountValue(2000.0)
+                    .applicableDays(Arrays.asList("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY"))
+                    .build();
+            benefitService.createBenefit(fixedDiscount2000);
+
+            // Monday to Thursday: $3000 off using 3000 points
+            BenefitRequestDTO fixedDiscount3000 = BenefitRequestDTO.builder()
+                    .type(Benefit.BenefitType.DISCOUNT)
+                    .pointsRequired(3000)
+                    .discountType(Benefit.DiscountType.FIXED_AMOUNT)
+                    .discountValue(3000.0)
+                    .applicableDays(Arrays.asList("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY"))
+                    .build();
+            benefitService.createBenefit(fixedDiscount3000);
+
+            // Monday to Thursday: Free Tiramisu using 400 points
+            Product tiramisu = productRepository.findByName("Tiramisu").orElse(null);
+            if (tiramisu != null) {
+                BenefitRequestDTO freeTiramisu = BenefitRequestDTO.builder()
+                        .type(Benefit.BenefitType.FREE_PRODUCT)
+                        .pointsRequired(400)
+                        .applicableDays(Arrays.asList("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY"))
+                        .productIds(Arrays.asList(tiramisu.getProductId()))
+                        .build();
+                benefitService.createBenefit(freeTiramisu);
+            }
+
+            // All days: Free Margherita Pizza using 500 points
+            Product margheritaPizza = productRepository.findByName("Margherita Pizza").orElse(null);
+            if (margheritaPizza != null) {
+                BenefitRequestDTO freePizza = BenefitRequestDTO.builder()
+                        .type(Benefit.BenefitType.FREE_PRODUCT)
+                        .pointsRequired(500)
+                        .applicableDays(Arrays.asList("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"))
+                        .productIds(Arrays.asList(margheritaPizza.getProductId()))
+                        .build();
+                benefitService.createBenefit(freePizza);
+            }
+
+            // All days: Free Chinese Tea using 600 points
+            Product chineseTea = productRepository.findByName("Chinese Tea").orElse(null);
+            if (chineseTea != null) {
+                BenefitRequestDTO freeTea = BenefitRequestDTO.builder()
+                        .type(Benefit.BenefitType.FREE_PRODUCT)
+                        .pointsRequired(600)
+                        .applicableDays(Arrays.asList("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"))
+                        .productIds(Arrays.asList(chineseTea.getProductId()))
+                        .build();
+                benefitService.createBenefit(freeTea);
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error creating sample benefits: " + e.getMessage());
+        }
     }
 
 

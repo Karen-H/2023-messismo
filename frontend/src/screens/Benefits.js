@@ -65,7 +65,11 @@ const BenefitsGrid = styled.div`
 
 const BenefitCard = styled(Card)`
   && {
-    border-left: 4px solid #a4d4cc;
+    border-left: 4px solid ${props => 
+      props.type === 'DISCOUNT' ? '#ff9800' : 
+      props.type === 'FREE_PRODUCT' ? '#4caf50' : 
+      '#a4d4cc'
+    };
     transition: transform 0.2s, box-shadow 0.2s;
     
     &:hover {
@@ -84,11 +88,19 @@ const BenefitHeader = styled.div`
 
 const BenefitIcon = styled.div`
   font-size: 2rem;
-  color: #a4d4cc;
+  color: ${props => 
+    props.type === 'DISCOUNT' ? '#ff9800' : 
+    props.type === 'FREE_PRODUCT' ? '#4caf50' : 
+    '#a4d4cc'
+  };
 `;
 
 const Points = styled.div`
-  background: #a4d4cc;
+  background: ${props => 
+    props.type === 'DISCOUNT' ? '#ff9800' : 
+    props.type === 'FREE_PRODUCT' ? '#4caf50' : 
+    '#a4d4cc'
+  };
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 20px;
@@ -184,7 +196,7 @@ function Benefits() {
   const loadMyPoints = async () => {
     try {
       const response = await clientService.getProfile();
-      setMyPoints(response.data.totalPoints || 0);
+      setMyPoints(response.data.currentPoints || 0);
     } catch (error) {
       console.error("Error loading points:", error);
     }
@@ -192,7 +204,9 @@ function Benefits() {
 
   const loadProducts = async () => {
     try {
-      const response = await productsService.getAllProducts();
+      const response = currentUser.role === 'CLIENT' 
+        ? await productsService.getProductsForClient()
+        : await productsService.getAllProducts();
       setProducts(response.data);
     } catch (error) {
       console.error("Error loading products:", error);
@@ -357,14 +371,14 @@ function Benefits() {
 
         {/* Benefits Grid */}
         <BenefitsGrid>
-          {availableBenefits.map((benefit) => (
+          {(currentUser.role === 'CLIENT' ? filteredBenefits : availableBenefits).map((benefit) => (
             <BenefitCard key={benefit.id} type={benefit.type}>
               <CardContent>
                 <BenefitHeader>
                   <BenefitIcon type={benefit.type}>
                     {benefit.type === 'DISCOUNT' ? <MdDiscount /> : <MdCardGiftcard />}
                   </BenefitIcon>
-                  <Points>{benefit.pointsRequired} pts</Points>
+                  <Points type={benefit.type}>{benefit.pointsRequired} pts</Points>
                 </BenefitHeader>
 
                 <Typography variant="h6" style={{ marginBottom: '1rem', color: '#333' }}>
@@ -393,7 +407,7 @@ function Benefits() {
                   <div style={{ marginBottom: '1rem' }}>
                     <Typography variant="body1" style={{ fontWeight: 'bold', color: '#4caf50' }}>
                       {benefit.productIds && benefit.productIds.length > 0
-                        ? `Product: ${products.find(p => p.productId === parseInt(benefit.productIds[0]))?.name || 'Unknown'}`
+                        ? `Product: ${products.find(p => p.productId == benefit.productIds[0])?.name || 'Unknown'}`
                         : 'Free Product'
                       }
                     </Typography>
@@ -427,24 +441,51 @@ function Benefits() {
                   )}
                 </div>
 
-                {currentUser.role === 'CLIENT' && benefit.pointsRequired > myPoints && (
-                  <Typography 
-                    variant="body2" 
-                    style={{ 
-                      color: '#f44336', 
-                      marginTop: '0.5rem',
-                      fontStyle: 'italic'
-                    }}
-                  >
-                    You need {benefit.pointsRequired - myPoints} more points
-                  </Typography>
-                )}
+                {currentUser.role === 'CLIENT' && (() => {
+                  const today = moment().format('dddd').toUpperCase();
+                  const isAvailableToday = !benefit.applicableDays || 
+                                         benefit.applicableDays.length === 0 || 
+                                         benefit.applicableDays.includes(today);
+                  const hasInsufficientPoints = benefit.pointsRequired > myPoints;
+                  
+                  const messages = [];
+                  
+                  if (!isAvailableToday) {
+                    messages.push("Not available today");
+                  }
+                  
+                  if (hasInsufficientPoints) {
+                    messages.push(`You need ${benefit.pointsRequired - myPoints} more points`);
+                  }
+                  
+                  if (messages.length > 0) {
+                    return (
+                      <div>
+                        {messages.map((message, index) => (
+                          <Typography 
+                            key={index}
+                            variant="body2" 
+                            style={{ 
+                              color: '#f44336', 
+                              marginTop: index === 0 ? '0.5rem' : '0.25rem',
+                              fontStyle: 'italic'
+                            }}
+                          >
+                            {message}
+                          </Typography>
+                        ))}
+                      </div>
+                    );
+                  }
+                  
+                  return null;
+                })()}
               </CardContent>
             </BenefitCard>
           ))}
         </BenefitsGrid>
 
-        {availableBenefits.length === 0 && (
+        {(currentUser.role === 'CLIENT' ? filteredBenefits : availableBenefits).length === 0 && (
           <div style={{ textAlign: 'center', marginTop: '3rem' }}>
             <Typography variant="h6" sx={{ color: 'white' }}>
               {selectedType === 'ALL' 
@@ -463,7 +504,6 @@ function Benefits() {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>Create New Benefit</DialogTitle>
         <DialogContent>
           <BenefitForm 
             onSubmit={handleCreateBenefit}

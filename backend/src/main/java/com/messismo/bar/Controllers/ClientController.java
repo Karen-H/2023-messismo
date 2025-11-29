@@ -36,6 +36,7 @@ public class ClientController {
             List<ProductClientViewDTO> clientProducts = productService.getAllProducts()
                     .stream()
                     .map(product -> ProductClientViewDTO.builder()
+                            .productId(product.getProductId())
                             .name(product.getName())
                             .description(product.getDescription())
                             .unitPrice(product.getUnitPrice())

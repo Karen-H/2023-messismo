@@ -340,8 +340,8 @@ function Orders() {
       if (order.pointsAwarded) {
         points = order.pointsAwarded.toFixed(2);
       } else {
-        // Órdenes históricas: calcular con tasa por defecto ($100 = 1 punto)
-        points = (order.totalPrice / 100).toFixed(2);
+        // Órdenes históricas: calcular con tasa de conversión actual
+        points = (order.totalPrice / conversionRate).toFixed(2);
       }
     }
     

@@ -71,6 +71,11 @@ public class BenefitController {
             BenefitResponseDTO createdBenefit = benefitService.createBenefit(requestDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdBenefit);
             
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("already exists")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -82,6 +87,18 @@ public class BenefitController {
     public ResponseEntity<Void> deleteBenefit(@PathVariable Long id) {
         boolean deleted = benefitService.deleteBenefit(id);
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
+
+    // Check if benefit is duplicate (only ADMIN and MANAGER)
+    @PostMapping("/check-duplicate")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<Boolean> checkDuplicateBenefit(@RequestBody BenefitRequestDTO requestDTO) {
+        try {
+            boolean isDuplicate = benefitService.isDuplicateBenefit(requestDTO);
+            return ResponseEntity.ok(isDuplicate);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     // Get benefits by type (accessible to all authenticated users)

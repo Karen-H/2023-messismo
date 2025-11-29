@@ -42,21 +42,73 @@ public class BenefitService {
 
     // Create new benefit
     public BenefitResponseDTO createBenefit(BenefitRequestDTO requestDTO) {
+        System.out.println("=== CREATE BENEFIT METHOD CALLED ===");
+        System.out.println("Request DTO: " + requestDTO);
         String currentUserEmail = getCurrentUserEmail();
+        
+        // Convert lists to JSON for comparison
+        String applicableDaysJson = listToJson(requestDTO.getApplicableDays());
+        String productIdsJson = longListToJson(requestDTO.getProductIds());
+        
+        // Check for duplicate benefits
+        System.out.println("=== DUPLICATE CHECK DEBUG ===");
+        System.out.println("Type: " + requestDTO.getType());
+        System.out.println("Points: " + requestDTO.getPointsRequired());
+        System.out.println("DiscountType: " + requestDTO.getDiscountType());
+        System.out.println("DiscountValue: " + requestDTO.getDiscountValue());
+        System.out.println("ApplicableDays: " + applicableDaysJson);
+        System.out.println("ProductIds: " + productIdsJson);
+        
+        List<Benefit> duplicates = benefitRepository.findDuplicateBenefits(
+            requestDTO.getType(),
+            requestDTO.getPointsRequired(),
+            requestDTO.getDiscountType(),
+            requestDTO.getDiscountValue(),
+            applicableDaysJson,
+            productIdsJson
+        );
+        
+        System.out.println("Found duplicates: " + duplicates.size());
+        for (Benefit dup : duplicates) {
+            System.out.println("Duplicate ID: " + dup.getId() + ", Type: " + dup.getType() + 
+                             ", Points: " + dup.getPointsRequired() + ", DiscountType: " + dup.getDiscountType() +
+                             ", DiscountValue: " + dup.getDiscountValue() + ", Days: " + dup.getApplicableDays());
+        }
+        
+        if (!duplicates.isEmpty()) {
+            throw new RuntimeException("Ya existe un beneficio con la misma configuración (puntos, tipo, descuento y días)");
+        }
         
         Benefit benefit = Benefit.builder()
                 .type(requestDTO.getType())
                 .pointsRequired(requestDTO.getPointsRequired())
                 .discountType(requestDTO.getDiscountType())
                 .discountValue(requestDTO.getDiscountValue())
-                .applicableDays(listToJson(requestDTO.getApplicableDays()))
-                .productIds(longListToJson(requestDTO.getProductIds()))
+                .applicableDays(applicableDaysJson)
+                .productIds(productIdsJson)
                 .createdBy(currentUserEmail)
                 .active(true)
                 .build();
         
         Benefit savedBenefit = benefitRepository.save(benefit);
         return convertToResponseDTO(savedBenefit);
+    }
+
+    // Check for duplicate benefits (for frontend validation)
+    public boolean isDuplicateBenefit(BenefitRequestDTO requestDTO) {
+        String applicableDaysJson = listToJson(requestDTO.getApplicableDays());
+        String productIdsJson = longListToJson(requestDTO.getProductIds());
+        
+        List<Benefit> duplicates = benefitRepository.findDuplicateBenefits(
+            requestDTO.getType(),
+            requestDTO.getPointsRequired(),
+            requestDTO.getDiscountType(),
+            requestDTO.getDiscountValue(),
+            applicableDaysJson,
+            productIdsJson
+        );
+        
+        return !duplicates.isEmpty();
     }
 
     // Delete benefit (soft delete)

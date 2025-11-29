@@ -12,6 +12,13 @@ const getAllProducts = () => {
   );
 };
 
+const getProductsForClient = () => {
+  return axios.get(
+    apiUrl + "/api/v1/client/products",
+    { headers: authHeader(), method: "GET", "Content-Type": "application/json" }
+  );
+};
+
 const addProducts = (product) => {
   const newProduct = {
     name: product.name,
@@ -167,6 +174,7 @@ const filter = (product) => {
 
 const productsService = {
   getAllProducts,
+  getProductsForClient,
   addProducts,
   deleteProduct,
   updateProductPrice,

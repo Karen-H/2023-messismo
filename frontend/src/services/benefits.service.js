@@ -56,13 +56,22 @@ const getBenefitsForPoints = (points) => {
   });
 };
 
+// Check if benefit is duplicate
+const checkDuplicateBenefit = (benefitData) => {
+  return axios.post(`${API_URL}/check-duplicate`, benefitData, { 
+    headers: authHeader(),
+    "Content-Type": "application/json" 
+  });
+};
+
 const benefitsService = {
   getAllBenefits,
   getBenefitById,
   createBenefit,
   deleteBenefit,
   getBenefitsByType,
-  getBenefitsForPoints
+  getBenefitsForPoints,
+  checkDuplicateBenefit
 };
 
 export default benefitsService;

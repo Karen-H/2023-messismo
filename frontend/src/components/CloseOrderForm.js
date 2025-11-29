@@ -166,17 +166,14 @@ function CloseOrderForm({ orderId, onCancel, onSuccess }) {
     setSuccess("");
     setIsLoading(true);
 
-    if (!selectedClientId) {
-      setError("Por favor selecciona un cliente");
-      setIsLoading(false);
-      return;
-    }
-
     try {
       const closeOrderData = {
-        orderId: orderId,
-        clientId: parseInt(selectedClientId)
+        orderId: orderId
       };
+      
+      if (selectedClientId) {
+        closeOrderData.clientId = parseInt(selectedClientId);
+      }
       
       if (selectedBenefitId) {
         closeOrderData.benefitId = parseInt(selectedBenefitId);
@@ -226,7 +223,7 @@ function CloseOrderForm({ orderId, onCancel, onSuccess }) {
             <option value="">Select client...</option>
             {clients.map((client) => (
               <option key={client.clientId} value={client.clientId}>
-                {client.username} ({client.email}) - Points: {client.currentPoints || 0}
+                {client.username} (ID: {client.clientId}) - Points: {client.currentPoints || 0}
               </option>
             ))}
           </Select>
@@ -269,7 +266,7 @@ function CloseOrderForm({ orderId, onCancel, onSuccess }) {
               })}
             </Select>
             {availableBenefits.length === 0 && selectedClientId && (
-              <div style={{color: '#f44336', fontSize: '0.9rem', marginTop: '0.5rem', fontWeight: 'bold'}}>
+              <div style={{color: '#f44336', fontSize: '0.9rem', marginTop: '0.5rem', fontWeight: 'bold', textAlign: 'center'}}>
                 No benefits available for this client
               </div>
             )}
@@ -289,7 +286,7 @@ function CloseOrderForm({ orderId, onCancel, onSuccess }) {
           <Button 
             type="button" 
             primary 
-            disabled={isLoading || !selectedClientId}
+            disabled={isLoading}
             onClick={handleSubmit}
           >
             {isLoading ? "Closing..." : "Close Order"}

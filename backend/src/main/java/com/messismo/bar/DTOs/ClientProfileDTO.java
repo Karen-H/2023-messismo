@@ -13,4 +13,5 @@ public class ClientProfileDTO {
     private String username;
     private String email;
     private String clientId;
+    private Double currentPoints;
 }
