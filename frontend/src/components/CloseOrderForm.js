@@ -10,6 +10,8 @@ const Container = styled.div`
   border-radius: 8px;
   min-width: 400px;
   max-width: 500px;
+  border: none;
+  outline: none;
 `;
 
 const Title = styled.h2`
@@ -87,10 +89,11 @@ const Button = styled.button`
 `;
 
 const ErrorMessage = styled.div`
-  color: #ff6b6b;
+  color: #f44336;
   font-size: 0.9rem;
   margin-top: 0.5rem;
   text-align: center;
+  font-weight: bold;
 `;
 
 const SuccessMessage = styled.div`
@@ -242,15 +245,28 @@ function CloseOrderForm({ orderId, onCancel, onSuccess }) {
               disabled={isLoading}
             >
               <option value="">No benefit</option>
-              {availableBenefits.map((benefit) => (
-                <option key={benefit.id} value={benefit.id}>
-                  {benefit.name} - {benefit.pointsRequired} points
-                  {benefit.type === 'DISCOUNT' && 
-                    ` (${benefit.discountType === 'PERCENTAGE' ? benefit.discountValue + '%' : '$' + benefit.discountValue} discount)`
+              {availableBenefits.map((benefit) => {
+                let displayText = `${benefit.pointsRequired} points`;
+                
+                if (benefit.type === 'DISCOUNT') {
+                  if (benefit.discountType === 'PERCENTAGE') {
+                    displayText += ` - ${benefit.discountValue}% OFF`;
+                  } else {
+                    displayText += ` - $${benefit.discountValue} OFF`;
                   }
-                  {benefit.type === 'FREE_PRODUCT' && ` (Free product)`}
-                </option>
-              ))}
+                } else if (benefit.type === 'FREE_PRODUCT') {
+                  const productName = benefit.productNames && benefit.productNames.length > 0 
+                    ? benefit.productNames[0] 
+                    : 'Product';
+                  displayText += ` - Free ${productName}`;
+                }
+                
+                return (
+                  <option key={benefit.id} value={benefit.id}>
+                    {displayText}
+                  </option>
+                );
+              })}
             </Select>
             {availableBenefits.length === 0 && selectedClientId && (
               <div style={{color: '#f44336', fontSize: '0.9rem', marginTop: '0.5rem', fontWeight: 'bold'}}>
@@ -268,7 +284,7 @@ function CloseOrderForm({ orderId, onCancel, onSuccess }) {
             onClick={handleCancel}
             disabled={isLoading}
           >
-          >Cancel
+            Cancel
           </Button>
           <Button 
             type="button" 

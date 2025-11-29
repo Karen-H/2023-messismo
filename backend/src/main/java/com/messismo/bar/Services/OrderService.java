@@ -142,6 +142,9 @@ public class OrderService {
             return "Order closed successfully";
         } catch (OrderNotFoundException | ClientIdNotFoundException e) {
             throw e;
+        } catch (RuntimeException e) {
+            // Para RuntimeExceptions (como validación de productos), mantener el mensaje original
+            throw new Exception(e.getMessage());
         } catch (Exception e) {
             throw new Exception("CANNOT close an order at the moment: " + e.getMessage());
         }

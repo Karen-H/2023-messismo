@@ -26,6 +26,7 @@ public class BenefitResponseDTO {
     
     // Fields for FREE_PRODUCT type
     private List<Long> productIds;
+    private List<String> productNames; // Names of products for display
     
     // Audit fields
     private String createdBy;

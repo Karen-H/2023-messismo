@@ -20,6 +20,9 @@ public class BenefitService {
 
     @Autowired
     private BenefitRepository benefitRepository;
+    
+    @Autowired
+    private com.messismo.bar.Repositories.ProductRepository productRepository;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -98,6 +101,18 @@ public class BenefitService {
 
     // Convert entity to response DTO
     private BenefitResponseDTO convertToResponseDTO(Benefit benefit) {
+        List<Long> productIds = jsonToLongList(benefit.getProductIds());
+        List<String> productNames = null;
+        
+        // Get product names for FREE_PRODUCT benefits
+        if (benefit.getType() == Benefit.BenefitType.FREE_PRODUCT && productIds != null && !productIds.isEmpty()) {
+            productNames = productIds.stream()
+                    .map(id -> productRepository.findById(id)
+                            .map(product -> product.getName())
+                            .orElse("Unknown Product"))
+                    .collect(Collectors.toList());
+        }
+        
         return BenefitResponseDTO.builder()
                 .id(benefit.getId())
                 .type(benefit.getType())
@@ -105,7 +120,8 @@ public class BenefitService {
                 .discountType(benefit.getDiscountType())
                 .discountValue(benefit.getDiscountValue())
                 .applicableDays(jsonToStringList(benefit.getApplicableDays()))
-                .productIds(jsonToLongList(benefit.getProductIds()))
+                .productIds(productIds)
+                .productNames(productNames)
                 .createdBy(benefit.getCreatedBy())
                 .createdAt(benefit.getCreatedAt())
                 .active(benefit.getActive())

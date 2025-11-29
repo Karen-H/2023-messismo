@@ -345,6 +345,22 @@ function Orders() {
       }
     }
     
+    // Formatear nombre del beneficio
+    let benefitName = null;
+    if (order.appliedBenefit) {
+      const benefit = order.appliedBenefit;
+      if (benefit.type === "DISCOUNT") {
+        if (benefit.discountType === "PERCENTAGE") {
+          benefitName = `${benefit.discountValue}% OFF`;
+        } else {
+          benefitName = `$${benefit.discountValue} OFF`;
+        }
+      } else if (benefit.type === "FREE_PRODUCT") {
+        // Para productos gratis, idealmente mostrar el nombre del producto
+        benefitName = `Free Product`;
+      }
+    }
+
     return {
       id: order.id,
       username: order.user.username,
@@ -357,6 +373,7 @@ function Orders() {
       status: order.status,
       points: points,
       pointsUsed: (order.pointsUsed || 0).toFixed(2),
+      benefitName: benefitName,
     };
   });
 
@@ -500,6 +517,18 @@ function Orders() {
           </Typography>
         );
       },
+    },
+    {
+      field: "benefitName",
+      headerName: "Benefit",
+      flex: 1,
+      align: "center",
+      headerAlign: "center",
+      sortable: true,
+      minWidth: 150,
+      renderCell: (params) => (
+        params.row.benefitName || "N/A"
+      ),
     },
     {
       field: "edit",
