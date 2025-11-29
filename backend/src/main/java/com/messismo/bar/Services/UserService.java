@@ -23,6 +23,7 @@ import java.util.List;
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
+    private final PointsService pointsService;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -50,12 +51,18 @@ public class UserService implements UserDetailsService {
         List<UserDTO> response = new ArrayList<>();
         for (User user : allUsers) {
             if (user.isClient()) {
+                // Obtener puntos actuales del cliente
+                Double currentPoints = pointsService.getPointsAccount(user.getClientId())
+                    .map(account -> account.getCurrentBalance())
+                    .orElse(0.0);
+                
                 UserDTO newUserDTO = UserDTO.builder()
                     .id(user.getId())
                     .role(user.getRole())
                     .username(user.getFunctionalUsername())
                     .email(user.getEmail())
                     .clientId(user.getClientId())
+                    .currentPoints(currentPoints)
                     .build();
                 response.add(newUserDTO);
             }

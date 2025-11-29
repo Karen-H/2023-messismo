@@ -10,6 +10,7 @@ import clientService from "../services/client.service";
 import { useSelector } from "react-redux";
 import { propsToClassKey } from "@mui/styles";
 import EditOrderForm from "./EditOrderForm";
+import CloseOrderForm from "./CloseOrderForm";
 
 
 const Form = styled.form`
@@ -223,7 +224,7 @@ const DetailsContent = styled.div`
         font-family: 'Roboto';
         font-size: 1.5rem;
     }
-    strong2{
+    strong{
         color: white;
         font-family: 'Roboto';
         font-size: 1.7rem;
@@ -435,76 +436,27 @@ const handleCloseOrder = () => {
     <>
      {!isEditFormVisible && formVisible && (
       <Form className="form-react">
-        <h1 style={{ fontSize: "1.7rem", marginBottom: "3%" }}>Order {orderId}</h1>
-        <Buttons>
-          <Button type="button" className="placeorder" onClick={handleAddProductsOrder}>
-            Add Products
-          </Button>
-          <Button type="button" className="cancel" onClick={handleCloseOrderDetails}>
-            Close Order
-          </Button>
-          <Button type="button" className="cancel" onClick={onCancel} style={{ marginTop: "20%" }}>
-            Cancel
-          </Button>
-        </Buttons>
-        
-        {closeOrderForm ? (
-               <Details>
-               <DetailsContent>
-                   {orderDetails.map(productOrder => (
-                           <div key={productOrder.productOrderId}>
-                               <strong>{productOrder.quantity}x {productOrder.productName}</strong><br />
-                               <strong>${productOrder.productUnitPrice} ea.</strong><br />
-                               <strong></strong><br />
-                           </div>
-                       ))}
-                    <strong2 style={{ color: "white" }}>Total price: ${totalPrice}</strong2>
-                    
-                    <ClientSelectContainer>
-                        <ClientLabel htmlFor="clientId">Assign Client (Optional):</ClientLabel>
-                        <ClientSelect
-                            id="clientId"
-                            list="clientsList"
-                            value={selectedClientId}
-                            onChange={(e) => setSelectedClientId(e.target.value)}
-                            placeholder="Type client ID or select..."
-                        />
-                        <datalist id="clientsList">
-                            {clients
-                                .filter(client => 
-                                    !selectedClientId || 
-                                    client.clientId.toString().startsWith(selectedClientId)
-                                )
-                                .map((client) => (
-                                    <option key={client.clientId} value={client.clientId}>
-                                        {client.username} (ID: {client.clientId})
-                                    </option>
-                                ))
-                            }
-                        </datalist>
-                        {selectedClientId && clients.find(c => c.clientId.toString() === selectedClientId) && (
-                            <div style={{ color: "white", fontSize: "0.9rem", marginTop: "0.5rem" }}>
-                                Selected client: {clients.find(c => c.clientId.toString() === selectedClientId)?.username}
-                            </div>
-                        )}
-                    </ClientSelectContainer>
-
-                    {error && <ErrorMessage>{error}</ErrorMessage>}
-
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem" }}>
-                   <DetailsButton onClick={() => handleCloseOrder()}>
-                       Close Order
-                   </DetailsButton>
-                   <DetailsButtonCancel onClick={() => handleCloseDetails()}>
-                       Cancel
-                   </DetailsButtonCancel>
-               </div>
-               </DetailsContent>
-                     
-           </Details>
-
+        {!closeOrderForm ? (
+          <Buttons>
+            <Button type="button" className="placeorder" onClick={handleAddProductsOrder}>
+              Add Products
+            </Button>
+            <Button type="button" className="cancel" onClick={handleCloseOrderDetails}>
+              Close Order
+            </Button>
+            <Button type="button" className="cancel" onClick={onCancel} style={{ marginTop: "20%" }}>
+              Cancel
+            </Button>
+          </Buttons>
         ) : (
-            null
+          <CloseOrderForm 
+            orderId={orderId}
+            onCancel={handleCloseDetails}
+            onSuccess={() => {
+              // Cerrar completamente el modal y volver a Orders
+              onCancel();
+            }}
+          />
         )}
       </Form>
        )}

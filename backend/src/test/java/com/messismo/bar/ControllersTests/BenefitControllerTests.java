@@ -264,7 +264,7 @@ public class BenefitControllerTests {
         when(benefitService.getBenefitsForPoints(150)).thenReturn(availableBenefits);
 
         // Act
-        ResponseEntity<?> response = benefitController.getBenefitsForPoints(150);
+        ResponseEntity<?> response = benefitController.getBenefitsForPoints(150.0);
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -278,7 +278,7 @@ public class BenefitControllerTests {
         when(benefitService.getBenefitsForPoints(-10)).thenReturn(Collections.emptyList());
 
         // Act
-        ResponseEntity<List<BenefitResponseDTO>> response = benefitController.getBenefitsForPoints(-10);
+        ResponseEntity<List<BenefitResponseDTO>> response = benefitController.getBenefitsForPoints(-10.0);
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());

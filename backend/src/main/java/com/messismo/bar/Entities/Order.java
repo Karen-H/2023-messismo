@@ -45,8 +45,16 @@ public class Order {
     private String status;
     @Column(name = "client_id")
     private Long clientId;
-    @Column(name = "points_awarded")
-    private Double pointsAwarded;
+    
+    @Column(name = "points_earned")
+    private Double pointsEarned;
+    
+    @Column(name = "points_used")
+    private Integer pointsUsed = 0;
+    
+    @ManyToOne
+    @JoinColumn(name = "applied_benefit_id", referencedColumnName = "id")
+    private Benefit appliedBenefit;
 
     @Override
     public String toString() {

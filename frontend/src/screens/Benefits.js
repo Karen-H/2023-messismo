@@ -65,7 +65,7 @@ const BenefitsGrid = styled.div`
 
 const BenefitCard = styled(Card)`
   && {
-    border-left: 4px solid ${props => props.type === 'DISCOUNT' ? '#ff9800' : '#4caf50'};
+    border-left: 4px solid #a4d4cc;
     transition: transform 0.2s, box-shadow 0.2s;
     
     &:hover {
@@ -84,7 +84,7 @@ const BenefitHeader = styled.div`
 
 const BenefitIcon = styled.div`
   font-size: 2rem;
-  color: ${props => props.type === 'DISCOUNT' ? '#ff9800' : '#4caf50'};
+  color: #a4d4cc;
 `;
 
 const Points = styled.div`

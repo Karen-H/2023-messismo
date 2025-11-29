@@ -24,7 +24,9 @@ const Container = styled.div`
   flex-direction: column; */
 `;
 
-const MainContent = styled.div`
+const MainContent = styled.div.withConfig({
+    shouldForwardProp: (prop) => prop !== 'visible',
+})`
   display: ${(props) => (props.visible ? "" : "none")};
   padding: 3rem;
 

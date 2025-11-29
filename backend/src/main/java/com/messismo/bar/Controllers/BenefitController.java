@@ -95,8 +95,8 @@ public class BenefitController {
     // Get benefits available for specific points (accessible to all authenticated users)
     @GetMapping("/available/{points}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('VALIDATEDEMPLOYEE') or hasRole('CLIENT')")
-    public ResponseEntity<List<BenefitResponseDTO>> getBenefitsForPoints(@PathVariable Integer points) {
-        List<BenefitResponseDTO> benefits = benefitService.getBenefitsForPoints(points);
+    public ResponseEntity<List<BenefitResponseDTO>> getBenefitsForPoints(@PathVariable Double points) {
+        List<BenefitResponseDTO> benefits = benefitService.getBenefitsForPoints(points.intValue());
         return ResponseEntity.ok(benefits);
     }
 }

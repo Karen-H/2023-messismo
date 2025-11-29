@@ -58,7 +58,7 @@ const DetailsContent = styled.div`
     font-family: "Roboto";
     font-size: 1.5rem;
   }
-  strong2{
+  strong{
     color: white;
     font-family: 'Roboto';
     font-size: 1.7rem;
@@ -231,6 +231,7 @@ function MyOrders() {
       }),
       status: order.status,
       points: points,
+      pointsUsed: (order.pointsUsed || 0).toFixed(2),
       productOrders: order.productOrders,
     };
   });
@@ -308,16 +309,32 @@ function MyOrders() {
     },
     {
       field: "points",
-      headerName: "Points",
+      headerName: "Points Earned",
       flex: 1,
       align: "center",
       headerAlign: "center",
       sortable: true,
-      minWidth: 100,
+      minWidth: 120,
       renderCell: (params) => {
         return (
-          <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#a4d4cc' }}>
-            {params.value}
+          <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#4caf50' }}>
+            +{params.value}
+          </Typography>
+        );
+      },
+    },
+    {
+      field: "pointsUsed",
+      headerName: "Points Used",
+      flex: 1,
+      align: "center",
+      headerAlign: "center",
+      sortable: true,
+      minWidth: 120,
+      renderCell: (params) => {
+        return (
+          <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#f44336' }}>
+            -{params.value || '0.00'}
           </Typography>
         );
       },
@@ -454,7 +471,7 @@ function MyOrders() {
                     <br />
                   </div>
                 ))}
-                <strong2 style={{ color: "white" }}>Total price: ${selectedTotalPrice}</strong2>
+                <strong style={{ color: "white" }}>Total price: ${selectedTotalPrice}</strong>
                 <DetailsButton onClick={() => handleCloseDetails()}>
                   Close
                 </DetailsButton>

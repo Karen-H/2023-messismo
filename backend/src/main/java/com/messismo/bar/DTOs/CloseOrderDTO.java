@@ -13,5 +13,6 @@ public class CloseOrderDTO {
 
     private Long orderId;
     private Long clientId;
+    private Long benefitId; // Optional benefit to apply
 
 }

@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Calendar;
@@ -466,4 +467,6 @@ public class InitialConfiguration {
         ProductDTO drink6 = ProductDTO.builder().name("Chinese Tea").description("Chinese tea with mint").category("Drink").unitPrice(5500.00).stock(150).unitCost(500.00).newCategory(false).build();
         productService.addProduct(drink6);
     }
+
+
 }

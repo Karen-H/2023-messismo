@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import clientService from "../services/client.service";
 import ordersService from "../services/orders.service";
+import benefitsService from "../services/benefits.service";
 
 const Container = styled.div`
   background-color: black;
@@ -100,14 +101,18 @@ const SuccessMessage = styled.div`
 `;
 
 function CloseOrderForm({ orderId, onCancel, onSuccess }) {
+  
   const [clients, setClients] = useState([]);
   const [selectedClientId, setSelectedClientId] = useState("");
+  const [availableBenefits, setAvailableBenefits] = useState([]);
+  const [selectedBenefitId, setSelectedBenefitId] = useState("");
+  const [clientPoints, setClientPoints] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  useEffect(() => {
-    // Cargar la lista de clientes
+  // Función para cargar clientes
+  const loadClients = () => {
     clientService.getAllClients()
       .then((response) => {
         setClients(response.data);
@@ -116,10 +121,44 @@ function CloseOrderForm({ orderId, onCancel, onSuccess }) {
         console.error("Error al cargar clientes:", error);
         setError("Error al cargar la lista de clientes");
       });
+  };
+
+  useEffect(() => {
+    loadClients();
   }, []);
 
+  const handleClientChange = (clientId) => {
+    setSelectedClientId(clientId);
+    setSelectedBenefitId("");
+    setAvailableBenefits([]);
+    
+    if (clientId) {
+      // Encontrar el cliente seleccionado para obtener sus puntos
+      const selectedClient = clients.find(client => client.clientId === clientId);
+      if (selectedClient) {
+        setClientPoints(selectedClient.currentPoints || 0);
+        
+        // Cargar beneficios disponibles para este cliente
+        if (selectedClient.currentPoints > 0) {
+          benefitsService.getBenefitsForPoints(selectedClient.currentPoints)
+            .then((response) => {
+              setAvailableBenefits(response.data);
+            })
+            .catch((error) => {
+              console.error("Error al cargar beneficios:", error);
+            });
+        }
+      }
+    } else {
+      setClientPoints(0);
+    }
+  };
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
+
     setError("");
     setSuccess("");
     setIsLoading(true);
@@ -131,19 +170,32 @@ function CloseOrderForm({ orderId, onCancel, onSuccess }) {
     }
 
     try {
-      await ordersService.closeOrderWithClient({
+      const closeOrderData = {
         orderId: orderId,
         clientId: parseInt(selectedClientId)
-      });
+      };
       
-      setSuccess("Orden cerrada exitosamente con cliente asignado");
-      setTimeout(() => {
-        onSuccess();
-      }, 1500);
+      if (selectedBenefitId) {
+        closeOrderData.benefitId = parseInt(selectedBenefitId);
+      }
+
+      
+      const response = await ordersService.closeOrderWithClient(closeOrderData);
+      
+      onSuccess();
     } catch (error) {
-      console.error("Error al cerrar la orden:", error);
-      if (error.response && error.response.data && error.response.data.message) {
-        setError(error.response.data.message);
+      console.error("Error completo al cerrar la orden:", error);
+      console.error("Response data:", error.response?.data);
+      console.error("Response status:", error.response?.status);
+      
+      if (error.response && error.response.data) {
+        if (typeof error.response.data === 'string') {
+          setError(error.response.data);
+        } else if (error.response.data.message) {
+          setError(error.response.data.message);
+        } else {
+          setError("Error desconocido del servidor");
+        }
       } else {
         setError("Error al cerrar la orden. Inténtalo de nuevo.");
       }
@@ -158,27 +210,57 @@ function CloseOrderForm({ orderId, onCancel, onSuccess }) {
 
   return (
     <Container>
-      <Title>Cerrar Orden #{orderId}</Title>
-      <form onSubmit={handleSubmit}>
+      <Title>Close Order #{orderId}</Title>
+      <div>
         <FormGroup>
-          <Label htmlFor="clientId">Asignar Cliente:</Label>
+          <Label htmlFor="clientId">Assign Client:</Label>
           <Select
             id="clientId"
             value={selectedClientId}
-            onChange={(e) => setSelectedClientId(e.target.value)}
+            onChange={(e) => handleClientChange(e.target.value)}
             disabled={isLoading}
           >
-            <option value="">Seleccionar cliente...</option>
+            <option value="">Select client...</option>
             {clients.map((client) => (
               <option key={client.clientId} value={client.clientId}>
-                {client.username} ({client.email})
+                {client.username} ({client.email}) - Points: {client.currentPoints || 0}
               </option>
             ))}
           </Select>
         </FormGroup>
 
+        {selectedClientId && (
+          <FormGroup>
+            <Label htmlFor="benefitId">Apply Benefit (Optional):</Label>
+            <div style={{color: '#999', fontSize: '0.85rem', marginBottom: '0.5rem'}}>
+              Only benefits valid for today are shown
+            </div>
+            <Select
+              id="benefitId"
+              value={selectedBenefitId}
+              onChange={(e) => setSelectedBenefitId(e.target.value)}
+              disabled={isLoading}
+            >
+              <option value="">No benefit</option>
+              {availableBenefits.map((benefit) => (
+                <option key={benefit.id} value={benefit.id}>
+                  {benefit.name} - {benefit.pointsRequired} points
+                  {benefit.type === 'DISCOUNT' && 
+                    ` (${benefit.discountType === 'PERCENTAGE' ? benefit.discountValue + '%' : '$' + benefit.discountValue} discount)`
+                  }
+                  {benefit.type === 'FREE_PRODUCT' && ` (Free product)`}
+                </option>
+              ))}
+            </Select>
+            {availableBenefits.length === 0 && selectedClientId && (
+              <div style={{color: '#f44336', fontSize: '0.9rem', marginTop: '0.5rem', fontWeight: 'bold'}}>
+                No benefits available for this client
+              </div>
+            )}
+          </FormGroup>
+        )}
+
         {error && <ErrorMessage>{error}</ErrorMessage>}
-        {success && <SuccessMessage>{success}</SuccessMessage>}
 
         <ButtonContainer>
           <Button 
@@ -186,17 +268,18 @@ function CloseOrderForm({ orderId, onCancel, onSuccess }) {
             onClick={handleCancel}
             disabled={isLoading}
           >
-            Cancelar
+          >Cancel
           </Button>
           <Button 
-            type="submit" 
+            type="button" 
             primary 
             disabled={isLoading || !selectedClientId}
+            onClick={handleSubmit}
           >
-            {isLoading ? "Cerrando..." : "Cerrar Orden"}
+            {isLoading ? "Closing..." : "Close Order"}
           </Button>
         </ButtonContainer>
-      </form>
+      </div>
     </Container>
   );
 }

@@ -21,4 +21,6 @@ public class UserDTO {
     private Role role;
 
     private String clientId;
+
+    private Double currentPoints;
 }

@@ -12,7 +12,9 @@ const Container = styled.div`
     font-size:1.5rem;
 `;
 
-const MainContent = styled.div`
+const MainContent = styled.div.withConfig({
+    shouldForwardProp: (prop) => prop !== 'visible',
+})`
     display: ${props => (props.visible ? 'flex' : 'none')};
     flex-direction: column;
     justify-content: flex-start;

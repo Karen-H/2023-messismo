@@ -58,7 +58,9 @@ const Button = styled.button`
   }
 `;
 
-const MainContent = styled.div`
+const MainContent = styled.div.withConfig({
+    shouldForwardProp: (prop) => prop !== 'visible',
+})`
   display: ${(props) => (props.visible ? "" : "none")};
   width: 100%;
   margin: auto;
@@ -90,7 +92,9 @@ const ModalContent = styled.div`
   overflow-y: auto;
 `;
 
-const OrdersTable = styled.div``;
+const OrdersTable = styled.div.withConfig({
+    shouldForwardProp: (prop) => !['sx'].includes(prop),
+})``;
 
 const Details = styled.div`
   display: flex;
@@ -121,7 +125,7 @@ const DetailsContent = styled.div`
     font-family: "Roboto";
     font-size: 1.5rem;
   }
-  strong2{
+  strong{
     color: white;
     font-family: 'Roboto';
     font-size: 1.7rem;
@@ -352,6 +356,7 @@ function Orders() {
       }),
       status: order.status,
       points: points,
+      pointsUsed: (order.pointsUsed || 0).toFixed(2),
     };
   });
 
@@ -466,16 +471,32 @@ function Orders() {
     },
     {
       field: "points",
-      headerName: "Points",
+      headerName: "Points Earned",
       flex: 1,
       align: "center",
       headerAlign: "center",
       sortable: true,
-      minWidth: 100,
+      minWidth: 120,
       renderCell: (params) => {
         return (
-          <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#a4d4cc' }}>
-            {params.value}
+          <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#4caf50' }}>
+            +{params.value}
+          </Typography>
+        );
+      },
+    },
+    {
+      field: "pointsUsed",
+      headerName: "Points Used",
+      flex: 1,
+      align: "center",
+      headerAlign: "center",
+      sortable: true,
+      minWidth: 120,
+      renderCell: (params) => {
+        return (
+          <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#f44336' }}>
+            -{params.value || '0.00'}
           </Typography>
         );
       },
@@ -666,7 +687,7 @@ function Orders() {
                         <br />
                       </div>
                     ))}
-                    <strong2 style={{ color: "white" }}>Total price: ${selectedTotalPrice}</strong2>
+                    <strong style={{ color: "white" }}>Total price: ${selectedTotalPrice}</strong>
 
                     <DetailsButton onClick={() => handleCloseDetails()}>
                       Close

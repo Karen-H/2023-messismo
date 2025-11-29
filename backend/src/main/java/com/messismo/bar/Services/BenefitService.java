@@ -75,9 +75,14 @@ public class BenefitService {
                 .collect(Collectors.toList());
     }
 
-    // Get benefits available for specific points
+    // Get benefits available for specific points and current day
     public List<BenefitResponseDTO> getBenefitsForPoints(Integer points) {
-        return benefitRepository.findByPointsRequiredLessThanEqual(points).stream()
+        String currentDay = java.time.LocalDate.now().getDayOfWeek().name();
+        
+        List<Benefit> allBenefits = benefitRepository.findByPointsRequiredLessThanEqual(points);
+        
+        return allBenefits.stream()
+                .filter(benefit -> benefit.isApplicableOnDay(currentDay))
                 .map(this::convertToResponseDTO)
                 .collect(Collectors.toList());
     }

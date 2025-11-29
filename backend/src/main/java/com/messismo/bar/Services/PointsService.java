@@ -148,4 +148,32 @@ public class PointsService {
     public Double getCurrentConversionRate() {
         return settingsService.getPointsConversionRate();
     }
+    
+    /**
+     * Usa puntos de un cliente para aplicar un beneficio
+     */
+    public void usePointsForBenefit(String clientId, Integer pointsToUse) {
+        PointsAccount account = pointsAccountRepository.findByClientId(clientId)
+            .orElseThrow(() -> new RuntimeException("Points account not found for client: " + clientId));
+        
+        if (account.getCurrentBalance() < pointsToUse) {
+            throw new RuntimeException("Insufficient points balance");
+        }
+        
+        // Crear transacción de uso de puntos
+        PointsTransaction transaction = new PointsTransaction(
+            clientId,
+            TransactionType.SPENT,
+            -pointsToUse.doubleValue(), // Negativo porque se están usando puntos
+            "benefit_application",
+            "Points used for benefit application"
+        );
+        
+        // Actualizar balance
+        account.setCurrentBalance(account.getCurrentBalance() - pointsToUse);
+        
+        // Guardar transacción y actualizar cuenta
+        pointsTransactionRepository.save(transaction);
+        pointsAccountRepository.save(account);
+    }
 }

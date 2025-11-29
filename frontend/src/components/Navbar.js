@@ -41,7 +41,9 @@ const NavLink = styled(Link)`
 
 `;
 
-const NavContainer = styled.nav`
+const NavContainer = styled.nav.withConfig({
+    shouldForwardProp: (prop) => prop !== 'clicked',
+})`
     padding: 2rem;
     background-color: ${props => (props.clicked ? '' : 'rgb(157,187,191,0.3)')};
     display: flex;
