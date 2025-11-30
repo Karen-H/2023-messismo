@@ -47,7 +47,7 @@ public class InitialConfiguration {
             System.out.println("ADDED BENEFITS");
             addSampleOrders(orderService, productRepository);
             System.out.println("ADDED ORDERS");
-            closeOrders(orderRepository);
+            closeOrders(orderRepository, pointsService);
             System.out.println("CLOSED ORDERS");
             addSampleGoals(goalService);
             System.out.println("ADDED GOALS");
@@ -86,12 +86,28 @@ public class InitialConfiguration {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         return dateFormat.parse(date);
     }
-    private void closeOrders(OrderRepository orderRepository) {
+    private void closeOrders(OrderRepository orderRepository, PointsService pointsService) {
         List<Order> allOrders = orderRepository.findAll();
         LocalDate cutoffDate = LocalDate.of(2023, 10, 1);
         for(Order order : allOrders){
             if (order.getDateCreated().toInstant().atZone(ZoneId.systemDefault()).toLocalDate().isBefore(cutoffDate)) {
                 order.setStatus("Closed");
+                
+                // Calcular y guardar pointsEarned para órdenes con clientId
+                if (order.getClientId() != null) {
+                    try {
+                        Double pointsEarned = pointsService.calculatePointsForAmount(order.getTotalPrice());
+                        order.setPointsEarned(pointsEarned);
+                        System.out.println("Calculated points for order " + order.getId() + ": " + pointsEarned);
+                    } catch (Exception e) {
+                        System.out.println("Error calculating points for order " + order.getId() + ": " + e.getMessage());
+                        // Usar tasa fija temporal de 100 si no está configurada
+                        Double pointsEarned = order.getTotalPrice() / 100.0;
+                        order.setPointsEarned(pointsEarned);
+                        System.out.println("Used fallback calculation for order " + order.getId() + ": " + pointsEarned);
+                    }
+                }
+                
                 orderRepository.save(order);
             }
         }

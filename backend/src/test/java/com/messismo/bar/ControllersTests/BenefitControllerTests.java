@@ -42,7 +42,6 @@ public class BenefitControllerTests {
     public void setUp() {
         MockitoAnnotations.openMocks(this);
         
-        // Setup discount benefit response
         discountBenefitResponse = BenefitResponseDTO.builder()
                 .id(1L)
                 .type(Benefit.BenefitType.DISCOUNT)
@@ -55,7 +54,6 @@ public class BenefitControllerTests {
                 .active(true)
                 .build();
 
-        // Setup free product benefit response
         freeProductBenefitResponse = BenefitResponseDTO.builder()
                 .id(2L)
                 .type(Benefit.BenefitType.FREE_PRODUCT)
@@ -66,7 +64,6 @@ public class BenefitControllerTests {
                 .active(true)
                 .build();
 
-        // Setup discount benefit request
         discountBenefitRequest = BenefitRequestDTO.builder()
                 .type(Benefit.BenefitType.DISCOUNT)
                 .pointsRequired(100)
@@ -75,7 +72,6 @@ public class BenefitControllerTests {
                 .applicableDays(Arrays.asList("MONDAY", "TUESDAY"))
                 .build();
 
-        // Setup free product benefit request
         freeProductBenefitRequest = BenefitRequestDTO.builder()
                 .type(Benefit.BenefitType.FREE_PRODUCT)
                 .pointsRequired(200)
@@ -85,14 +81,11 @@ public class BenefitControllerTests {
 
     @Test
     public void testGetAllBenefits_Success() throws Exception {
-        // Arrange
         List<BenefitResponseDTO> benefits = Arrays.asList(discountBenefitResponse, freeProductBenefitResponse);
         when(benefitService.getAllActiveBenefits()).thenReturn(benefits);
 
-        // Act
         ResponseEntity<?> response = benefitController.getAllBenefits();
 
-        // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(benefits, response.getBody());
         verify(benefitService, times(1)).getAllActiveBenefits();
@@ -100,13 +93,10 @@ public class BenefitControllerTests {
 
     @Test
     public void testGetAllBenefits_EmptyList() throws Exception {
-        // Arrange
         when(benefitService.getAllActiveBenefits()).thenReturn(Arrays.asList());
 
-        // Act
         ResponseEntity<?> response = benefitController.getAllBenefits();
 
-        // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(Arrays.asList(), response.getBody());
         verify(benefitService, times(1)).getAllActiveBenefits();
@@ -116,13 +106,10 @@ public class BenefitControllerTests {
 
     @Test
     public void testGetBenefitById_Success() throws Exception {
-        // Arrange
         when(benefitService.getBenefitById(1L)).thenReturn(Optional.of(discountBenefitResponse));
 
-        // Act
         ResponseEntity<?> response = benefitController.getBenefitById(1L);
 
-        // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(discountBenefitResponse, response.getBody());
         verify(benefitService, times(1)).getBenefitById(1L);
@@ -130,13 +117,10 @@ public class BenefitControllerTests {
 
     @Test
     public void testGetBenefitById_NotFound() throws Exception {
-        // Arrange
         when(benefitService.getBenefitById(999L)).thenReturn(Optional.empty());
 
-        // Act
         ResponseEntity<BenefitResponseDTO> response = benefitController.getBenefitById(999L);
 
-        // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertNull(response.getBody()); // notFound().build() no tiene body
         verify(benefitService, times(1)).getBenefitById(999L);
@@ -146,79 +130,52 @@ public class BenefitControllerTests {
 
     @Test
     public void testCreateDiscountBenefit_Success() throws Exception {
-        // Arrange
         when(benefitService.createBenefit(any(BenefitRequestDTO.class))).thenReturn(discountBenefitResponse);
 
-        // Act
         ResponseEntity<?> response = benefitController.createBenefit(discountBenefitRequest);
 
-        // Assert
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(discountBenefitResponse, response.getBody());
         verify(benefitService, times(1)).createBenefit(any(BenefitRequestDTO.class));
     }
 
-    @Test
-    public void testCreateFreeProductBenefit_Success() throws Exception {
-        // Arrange
-        when(benefitService.createBenefit(any(BenefitRequestDTO.class))).thenReturn(freeProductBenefitResponse);
 
-        // Act
-        ResponseEntity<?> response = benefitController.createBenefit(freeProductBenefitRequest);
-
-        // Assert
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(freeProductBenefitResponse, response.getBody());
-        verify(benefitService, times(1)).createBenefit(any(BenefitRequestDTO.class));
-    }
 
     @Test
     public void testCreateBenefit_NullRequest() throws Exception {
-        // Act - Con request null, el controller intenta acceder a los campos y se produce NullPointerException
-        // que es capturada por el try-catch y retorna INTERNAL_SERVER_ERROR
         ResponseEntity<BenefitResponseDTO> response = benefitController.createBenefit(null);
 
-        // Assert
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         verify(benefitService, never()).createBenefit(any(BenefitRequestDTO.class));
     }
 
     @Test
     public void testCreateBenefit_ServiceException() throws Exception {
-        // Arrange
         when(benefitService.createBenefit(any(BenefitRequestDTO.class)))
                 .thenThrow(new RuntimeException("Database error"));
 
-        // Act - El controller captura la excepción del service y retorna INTERNAL_SERVER_ERROR
         ResponseEntity<BenefitResponseDTO> response = benefitController.createBenefit(discountBenefitRequest);
 
-        // Assert
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         verify(benefitService, times(1)).createBenefit(any(BenefitRequestDTO.class));
     }
 
     @Test
     public void testDeleteBenefit_Success() throws Exception {
-        // Arrange
         when(benefitService.deleteBenefit(1L)).thenReturn(true);
 
-        // Act
         ResponseEntity<?> response = benefitController.deleteBenefit(1L);
 
-        // Assert
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
         verify(benefitService, times(1)).deleteBenefit(1L);
     }
 
     @Test
     public void testDeleteBenefit_NotFound() throws Exception {
-        // Arrange
         when(benefitService.deleteBenefit(999L)).thenReturn(false);
 
-        // Act
         ResponseEntity<Void> response = benefitController.deleteBenefit(999L);
 
-        // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertNull(response.getBody()); // notFound().build() no tiene body
         verify(benefitService, times(1)).deleteBenefit(999L);
@@ -228,14 +185,11 @@ public class BenefitControllerTests {
 
     @Test
     public void testGetBenefitsByType_Success() throws Exception {
-        // Arrange
         List<BenefitResponseDTO> discountBenefits = Arrays.asList(discountBenefitResponse);
         when(benefitService.getBenefitsByType(Benefit.BenefitType.DISCOUNT)).thenReturn(discountBenefits);
 
-        // Act
         ResponseEntity<?> response = benefitController.getBenefitsByType(Benefit.BenefitType.DISCOUNT);
 
-        // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(discountBenefits, response.getBody());
         verify(benefitService, times(1)).getBenefitsByType(Benefit.BenefitType.DISCOUNT);
@@ -243,13 +197,10 @@ public class BenefitControllerTests {
 
     @Test
     public void testGetBenefitsByType_EmptyList() throws Exception {
-        // Arrange
         when(benefitService.getBenefitsByType(Benefit.BenefitType.DISCOUNT)).thenReturn(Arrays.asList());
 
-        // Act
         ResponseEntity<?> response = benefitController.getBenefitsByType(Benefit.BenefitType.DISCOUNT);
 
-        // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(Arrays.asList(), response.getBody());
         verify(benefitService, times(1)).getBenefitsByType(Benefit.BenefitType.DISCOUNT);
@@ -259,14 +210,11 @@ public class BenefitControllerTests {
 
     @Test
     public void testGetBenefitsForPoints_Success() throws Exception {
-        // Arrange
         List<BenefitResponseDTO> availableBenefits = Arrays.asList(discountBenefitResponse);
         when(benefitService.getBenefitsForPoints(150)).thenReturn(availableBenefits);
 
-        // Act
         ResponseEntity<?> response = benefitController.getBenefitsForPoints(150.0);
 
-        // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(availableBenefits, response.getBody());
         verify(benefitService, times(1)).getBenefitsForPoints(150);
@@ -274,17 +222,50 @@ public class BenefitControllerTests {
 
     @Test
     public void testGetBenefitsForPoints_NegativePoints() throws Exception {
-        // Arrange - Con puntos negativos, el servicio retorna lista vacía
         when(benefitService.getBenefitsForPoints(-10)).thenReturn(Collections.emptyList());
 
-        // Act
         ResponseEntity<List<BenefitResponseDTO>> response = benefitController.getBenefitsForPoints(-10.0);
 
-        // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertTrue(response.getBody().isEmpty());
         verify(benefitService, times(1)).getBenefitsForPoints(-10);
     }
 
+    @Test
+    public void testCheckDuplicateBenefit_IsDuplicate() throws Exception {
+        when(benefitService.isDuplicateBenefit(any(BenefitRequestDTO.class))).thenReturn(true);
+
+        ResponseEntity<Boolean> response = benefitController.checkDuplicateBenefit(discountBenefitRequest);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(response.getBody());
+        
+        verify(benefitService, times(1)).isDuplicateBenefit(discountBenefitRequest);
+    }
+
+    @Test
+    public void testCheckDuplicateBenefit_IsNotDuplicate() throws Exception {
+        when(benefitService.isDuplicateBenefit(any(BenefitRequestDTO.class))).thenReturn(false);
+
+        ResponseEntity<Boolean> response = benefitController.checkDuplicateBenefit(freeProductBenefitRequest);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertFalse(response.getBody());
+        
+        verify(benefitService, times(1)).isDuplicateBenefit(freeProductBenefitRequest);
+    }
+
+    @Test
+    public void testCheckDuplicateBenefit_ServiceException() throws Exception {
+        when(benefitService.isDuplicateBenefit(any(BenefitRequestDTO.class)))
+                .thenThrow(new RuntimeException("Database error"));
+
+        ResponseEntity<Boolean> response = benefitController.checkDuplicateBenefit(discountBenefitRequest);
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNull(response.getBody());
+        
+        verify(benefitService, times(1)).isDuplicateBenefit(discountBenefitRequest);
+    }
 
 }

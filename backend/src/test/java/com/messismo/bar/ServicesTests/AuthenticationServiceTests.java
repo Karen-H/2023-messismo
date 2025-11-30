@@ -55,9 +55,6 @@ public class AuthenticationServiceTests {
         MockitoAnnotations.openMocks(this);
 
         User newEmployee = User.builder().username("martincito").password(passwordEncoder.encode("password")).role(Role.EMPLOYEE).build();
-//        newEmployee.setUsername("martincito");
-//        newEmployee.setPassword(passwordEncoder.encode("password"));
-//        newEmployee.setRole(Role.EMPLOYEE);
         when(userRepository.findByEmail("ramon@gmail.com")).thenReturn(Optional.empty());
         when(userRepository.findByEmail("ramon2@gmail.com")).thenReturn(Optional.ofNullable(newEmployee));
         when(userRepository.findByUsername("martincito")).thenReturn(Optional.empty());

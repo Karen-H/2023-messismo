@@ -337,11 +337,10 @@ function Orders() {
     let points = "0.00";
     
     if (isClosed && order.clientId) {
-      if (order.pointsAwarded) {
-        points = order.pointsAwarded.toFixed(2);
+      if (order.pointsEarned) {
+        points = order.pointsEarned.toFixed(2);
       } else {
-        // Órdenes históricas: calcular con tasa de conversión actual
-        points = (order.totalPrice / conversionRate).toFixed(2);
+        points = (order.totalPrice / 100).toFixed(2);
       }
     }
     

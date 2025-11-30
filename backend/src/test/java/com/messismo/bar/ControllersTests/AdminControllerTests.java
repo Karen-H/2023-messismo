@@ -36,7 +36,7 @@ public class AdminControllerTests {
     public void testValidateAdmin_Success() throws Exception {
 
         UserIdDTO userIdDTO = new UserIdDTO(1L);
-        when(userService.validateEmployee(any(UserIdDTO.class))).thenReturn("Validation successful");
+        when(userService.validateManager(any(UserIdDTO.class))).thenReturn("Validation successful");
         ResponseEntity<?> response = adminController.validateAdmin(userIdDTO);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -58,7 +58,7 @@ public class AdminControllerTests {
     @Test
     public void testValidateAdmin_ConflictUsernameNotFoundException() throws Exception {
         UserIdDTO userIdDTO = new UserIdDTO(1L);
-        when(userService.validateEmployee(any(UserIdDTO.class))).thenThrow(new UsernameNotFoundException("User not found"));
+        when(userService.validateManager(any(UserIdDTO.class))).thenThrow(new UsernameNotFoundException("User not found"));
         ResponseEntity<?> response = adminController.validateAdmin(userIdDTO);
 
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
@@ -70,7 +70,7 @@ public class AdminControllerTests {
     public void testValidateAdmin_ConflictCannotUpgradeToManagerException() throws Exception {
 
         UserIdDTO userIdDTO = new UserIdDTO(1L);
-        when(userService.validateEmployee(any(UserIdDTO.class))).thenThrow(new CannotUpgradeToManager("Cannot upgrade to manager"));
+        when(userService.validateManager(any(UserIdDTO.class))).thenThrow(new CannotUpgradeToManager("Cannot upgrade to manager"));
         ResponseEntity<?> response = adminController.validateAdmin(userIdDTO);
 
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
@@ -82,7 +82,7 @@ public class AdminControllerTests {
     public void testValidateAdmin_InternalServerError() throws Exception {
 
         UserIdDTO userIdDTO = new UserIdDTO(1L);
-        when(userService.validateEmployee(any(UserIdDTO.class))).thenThrow(new Exception("Some internal error"));
+        when(userService.validateManager(any(UserIdDTO.class))).thenThrow(new Exception("Some internal error"));
         ResponseEntity<?> response = adminController.validateAdmin(userIdDTO);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
