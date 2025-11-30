@@ -4,8 +4,6 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "./mvnw spring-boot:run",
-    "healthcheckPath": "/actuator/health",
-    "healthcheckTimeout": 600
+    "startCommand": "./mvnw spring-boot:run"
   }
 }
