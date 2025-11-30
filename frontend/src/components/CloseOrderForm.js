@@ -4,6 +4,7 @@ import clientService from "../services/client.service";
 import ordersService from "../services/orders.service";
 import benefitsService from "../services/benefits.service";
 
+/* Mobile fix applied: 2025-11-30T16:15 */
 const Container = styled.div`
   background-color: black;
   padding: 2rem;
@@ -12,6 +13,14 @@ const Container = styled.div`
   max-width: 500px;
   border: none;
   outline: none;
+  
+  @media (max-width: 768px) {
+    min-width: unset;
+    max-width: 100%;
+    width: 100%;
+    margin: 0 10px;
+    box-sizing: border-box;
+  }
 `;
 
 const Title = styled.h2`

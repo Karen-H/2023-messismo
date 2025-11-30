@@ -131,8 +131,10 @@ const CurrentValue = styled.div`
   }
 `;
 
+/* Menu mobile fix: 2025-11-30T16:30 */
 const Settings = () => {
   const { user: currentUser } = useSelector((state) => state.auth);
+  const clicked = useSelector((state) => state.navigation.clicked);
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(true);
   const [currentRate, setCurrentRate] = useState(100);
@@ -336,7 +338,7 @@ const Settings = () => {
   return (
     <Container>
       <Navbar />
-      <MainContent visible={visible}>
+      <MainContent visible={!clicked}>
         <Typography
           variant="h3"
           component="h3"
