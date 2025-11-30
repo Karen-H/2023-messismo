@@ -8,8 +8,12 @@ import ClientProductsList from "../components/ClientProductsList";
 const Container = styled.div`
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    min-height: 100vh;
     font-size: 1.5rem;
+    
+    @media (max-width: 768px) {
+        font-size: 1rem;
+    }
 `;
 
 const MainContent = styled.div`
@@ -19,6 +23,12 @@ const MainContent = styled.div`
     align-items: center;
     flex-grow: 1;
     font-size: 1.5rem;
+    padding: 0 10px;
+    
+    @media (max-width: 768px) {
+        font-size: 1rem;
+        padding: 0 5px;
+    }
 `;
 
 function ClientProducts() {

@@ -593,8 +593,15 @@ function Login() {
               </Dialog>
             </form>
           </div>
+          
+          <div className="mobileFooter flx">
+            <span className="text">Don't have an account?</span>
+            <Link to={"/register"}>
+              <button className="btn">Sign Up</button>
+            </Link>
+          </div>
 
-          <div className="imageDiv">
+          <div className="imageDiv flx">
             <img src={image} className="imag"></img>
 
             <div className="textDiv">

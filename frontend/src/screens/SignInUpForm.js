@@ -25,16 +25,37 @@ import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 import Alert from "@mui/material/Alert";
 
+const PageContainer = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+`;
+
 const BackgroundBox = styled.div`
   background-color: black;
-  height: 50vh;
-  width: 90vh;
+  height: 500px;
+  width: 800px;
+  max-width: 90vw;
   display: flex;
   justify-content: center;
   position: relative;
-  margin: 23rem auto;
   border-radius: 23px;
-  min-height: 300px;
+
+  @media (max-width: 768px) {
+    width: 90vw;
+    height: 450px;
+  }
+
+  @media (max-width: 480px) {
+    width: 95vw;
+    height: 400px;
+  }
 
   .signin {
     z-index: ${(props) => (props.clicked ? "-600" : "500")};
@@ -61,7 +82,17 @@ const BackgroundBox = styled.div`
   }
 
   @media (max-width: 768px) {
-    width: 100%;
+    width: 95vw;
+    height: 45vh;
+    margin: 5vh auto;
+    min-height: 280px;
+  }
+
+  @media (max-width: 480px) {
+    width: 98vw;
+    height: 40vh;
+    margin: 3vh auto;
+    min-height: 260px;
   }
 `;
 
@@ -103,6 +134,26 @@ const Box1 = styled.div`
     border-left: 4px solid black;
     border-right: 4px solid black;
   }
+
+  @media (max-width: 768px) {
+    transform: ${(props) =>
+      props.clicked ? "translateX(85%)" : "translateX(5%)"};
+    
+    &::before, &::after {
+      top: ${(props) => props.clicked ? "2rem" : "1.5rem"};
+      bottom: ${(props) => props.clicked ? "2rem" : "1.5rem"};
+    }
+  }
+
+  @media (max-width: 480px) {
+    transform: ${(props) =>
+      props.clicked ? "translateX(80%)" : "translateX(2%)"};
+    
+    &::before, &::after {
+      top: ${(props) => props.clicked ? "1rem" : "1rem"};
+      bottom: ${(props) => props.clicked ? "1rem" : "1rem"};
+    }
+  }
 `;
 
 const Box2 = styled.div`
@@ -126,6 +177,18 @@ const Box2 = styled.div`
     props.clicked ? "url(/images/signup2.png)" : "url(/images/signin2.png)"};
   background-size: cover;
   background-repeat: no-repeat;
+
+  @media (max-width: 768px) {
+    width: 50%;
+    transform: ${(props) =>
+      props.clicked ? "translateX(-110%)" : "translateX(0%)"};
+  }
+
+  @media (max-width: 480px) {
+    width: 55%;
+    transform: ${(props) =>
+      props.clicked ? "translateX(-100%)" : "translateX(0%)"};
+  }
 `;
 
 const Form = styled.form`
@@ -138,6 +201,14 @@ const Form = styled.form`
 
   ::placeholder {
     color: #a4d4cc;
+  }
+
+  @media (max-width: 768px) {
+    width: 80%;
+  }
+
+  @media (max-width: 480px) {
+    width: 90%;
   }
 `;
 
@@ -153,6 +224,16 @@ const Input = styled.input`
   &:focus {
     outline: none;
     border: none;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.8rem 1.5rem;
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
   }
 `;
 
@@ -181,6 +262,18 @@ const NavLink = styled(Link)`
   &:focus {
     outline: none;
   }
+
+  @media (max-width: 768px) {
+    padding: 0.8rem 2.5rem;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.7rem 2rem;
+    margin-top: 1rem;
+    font-size: 0.8rem;
+  }
 `;
 
 const Title = styled.h1`
@@ -189,6 +282,16 @@ const Title = styled.h1`
   font-family: "Roboto", serif;
   color: #a7d0cd;
   text-align: center;
+
+  @media (max-width: 768px) {
+    font-size: 3em;
+    margin-bottom: 1.5rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 2.5em;
+    margin-bottom: 1rem;
+  }
 `;
 
 const ForgotLink = styled.a`
@@ -222,6 +325,18 @@ const ButtonAnimate = styled.button`
   &:focus {
     outline: none;
   }
+
+  @media (max-width: 768px) {
+    &::before {
+      font-size: 1.2em;
+    }
+  }
+
+  @media (max-width: 480px) {
+    &::before {
+      font-size: 1em;
+    }
+  }
 `;
 
 const Text = styled.div`
@@ -238,6 +353,18 @@ const Text = styled.div`
   padding: 10px;
   display: ${(props) => (props.show ? "block" : "none")};
   font-size: 2em;
+
+  @media (max-width: 768px) {
+    font-size: 1.5em;
+    padding: 8px;
+    width: 90%;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1.2em;
+    padding: 6px;
+    width: 95%;
+  }
 `;
 
 const ErrorMessage = styled.h4`
@@ -505,7 +632,8 @@ function SignInUpForm() {
   };
 
   return (
-    <BackgroundBox clicked={click}>
+    <PageContainer>
+      <BackgroundBox clicked={click}>
       <Box1 clicked={click}>
         <Form className="signin" show={!click}>
           <Title>Sign In</Title>
@@ -892,6 +1020,7 @@ function SignInUpForm() {
         </Alert>
       </Snackbar>
     </BackgroundBox>
+    </PageContainer>
   );
 }
 

@@ -196,6 +196,14 @@ const Register = () => {
 
                         </form>
                     </div>
+                    
+                    <div className="mobileFooter flx">
+                        <span className="text">Already have an account?</span>
+                        <Link to={"/login"}>
+                            <button className="btn">Sign In</button>
+                        </Link>
+                    </div>
+                    
                     <div className='imageDiv'>
                         <img src={image} className='imag'></img>
 
