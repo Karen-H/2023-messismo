@@ -385,7 +385,6 @@ function Dashboard() {
     dashboardService
       .getDashboard({ dateRequested: "", categoryList: selectedCategories })
       .then((response) => {
-        console.log(response);
         setDashboardData(response);
         setIsLoading(false);
       })

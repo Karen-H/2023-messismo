@@ -1,5 +1,6 @@
 package com.messismo.bar.Services;
 
+import com.messismo.bar.DTOs.ClientProfileDTO;
 import com.messismo.bar.DTOs.UserDTO;
 import com.messismo.bar.DTOs.UserIdDTO;
 import com.messismo.bar.Entities.User;
@@ -22,6 +23,7 @@ import java.util.List;
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
+    private final PointsService pointsService;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -32,8 +34,38 @@ public class UserService implements UserDetailsService {
         List<User> allEmployees = userRepository.findAll();
         List<UserDTO> response = new ArrayList<>();
         for (User user : allEmployees) {
-            UserDTO newUserDTO = UserDTO.builder().id(user.getId()).role(user.getRole()).username(user.getFunctionalUsername()).email(user.getEmail()).build();
+            UserDTO newUserDTO = UserDTO.builder()
+                .id(user.getId())
+                .role(user.getRole())
+                .username(user.getFunctionalUsername())
+                .email(user.getEmail())
+                .clientId(user.getClientId())
+                .build();
             response.add(newUserDTO);
+        }
+        return response;
+    }
+
+    public List<UserDTO> getAllClients() {
+        List<User> allUsers = userRepository.findAll();
+        List<UserDTO> response = new ArrayList<>();
+        for (User user : allUsers) {
+            if (user.isClient()) {
+                // Obtener puntos actuales del cliente
+                Double currentPoints = pointsService.getPointsAccount(user.getClientId())
+                    .map(account -> account.getCurrentBalance())
+                    .orElse(0.0);
+                
+                UserDTO newUserDTO = UserDTO.builder()
+                    .id(user.getId())
+                    .role(user.getRole())
+                    .username(user.getFunctionalUsername())
+                    .email(user.getEmail())
+                    .clientId(user.getClientId())
+                    .currentPoints(currentPoints)
+                    .build();
+                response.add(newUserDTO);
+            }
         }
         return response;
     }
@@ -69,6 +101,29 @@ public class UserService implements UserDetailsService {
             throw e;
         } catch (Exception e) {
             throw new Exception("Cannot upgrade to manager");
+        }
+    }
+
+    public ClientProfileDTO getClientProfile(String email) throws Exception {
+        try {
+            User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+            
+            if (!user.isClient()) {
+                throw new Exception("User is not a client");
+            }
+            
+            // Obtener puntos del cliente
+            Double currentPoints = pointsService.getCurrentBalance(user.getClientId());
+            
+            return ClientProfileDTO.builder()
+                .username(user.getFunctionalUsername())
+                .email(user.getEmail())
+                .clientId(user.getClientId())
+                .currentPoints(currentPoints)
+                .build();
+        } catch (Exception e) {
+            throw new Exception("Error retrieving client profile");
         }
     }
 }

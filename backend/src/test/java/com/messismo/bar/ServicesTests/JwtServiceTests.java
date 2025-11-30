@@ -49,7 +49,13 @@ public class JwtServiceTests {
     @Test
     public void testGenerateToken() {
 
-        User user1 = new User(1L, "admin", "admin@mail.com", "password1", Role.ADMIN);
+        User user1 = User.builder()
+            .id(1L)
+            .username("admin")
+            .email("admin@mail.com")
+            .password("password1")
+            .role(Role.ADMIN)
+            .build();
         String token = jwtService.generateToken(user1);
 
         Assertions.assertNotNull(token);
@@ -63,7 +69,13 @@ public class JwtServiceTests {
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("key1", "value1");
         extraClaims.put("key2", 123);
-        User user1 = new User(1L, "admin", "admin@mail.com", "password1", Role.ADMIN);
+        User user1 = User.builder()
+            .id(1L)
+            .username("admin")
+            .email("admin@mail.com")
+            .password("password1")
+            .role(Role.ADMIN)
+            .build();
         String token = jwtService.generateToken(extraClaims, user1);
 
         Assertions.assertNotNull(token);
@@ -85,7 +97,13 @@ public class JwtServiceTests {
     public void testIsTokenValid() {
 
         String token = generateSampleToken("testUser");
-        User user1 = new User(1L, "admin", "admin@mail.com", "password1", Role.ADMIN);
+        User user1 = User.builder()
+            .id(1L)
+            .username("admin")
+            .email("admin@mail.com")
+            .password("password1")
+            .role(Role.ADMIN)
+            .build();
         boolean isValid = jwtService.isTokenValid(token, user1);
 
         Assertions.assertFalse(isValid);
@@ -96,7 +114,13 @@ public class JwtServiceTests {
     public void testIsTokenValid_ExpiredToken() {
 
         String token = generateSampleTokenWithExpiration("testUser", new Date(System.currentTimeMillis() - 360000000));
-        User user1 = new User(1L, "admin", "admin@mail.com", "password1", Role.ADMIN);
+        User user1 = User.builder()
+            .id(1L)
+            .username("admin")
+            .email("admin@mail.com")
+            .password("password1")
+            .role(Role.ADMIN)
+            .build();
 
         assertThrows(ExpiredJwtException.class, () -> {
             jwtService.isTokenValid(token, user1);
@@ -107,7 +131,13 @@ public class JwtServiceTests {
     @Test
     public void testGenerateAndVerifyToken() {
 
-        User user1 = new User(1L, "admin", "admin@mail.com", "password1", Role.ADMIN);
+        User user1 = User.builder()
+            .id(1L)
+            .username("admin")
+            .email("admin@mail.com")
+            .password("password1")
+            .role(Role.ADMIN)
+            .build();
         String token = jwtService.generateToken(user1);
         boolean isValid = jwtService.isTokenValid(token, user1);
 
@@ -126,7 +156,13 @@ public class JwtServiceTests {
         @Test
         public void testGenerateRefreshToken() {
 
-            User user1 = new User(1L, "admin", "admin@mail.com", "password1", Role.ADMIN);
+            User user1 = User.builder()
+                .id(1L)
+                .username("admin")
+                .email("admin@mail.com")
+                .password("password1")
+                .role(Role.ADMIN)
+                .build();
             String refreshToken = jwtService.generateRefreshToken(user1);
 
             Assertions.assertNotNull(refreshToken);

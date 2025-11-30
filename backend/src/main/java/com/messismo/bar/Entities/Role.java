@@ -15,6 +15,12 @@ import static com.messismo.bar.Entities.Permission.*;
 public enum Role {
 
     USER(Collections.emptySet()),
+    CLIENT(
+            Set.of(
+                    CLIENT_READ_PROFILE,
+                    CLIENT_VIEW_PRODUCTS
+            )
+    ),
     ADMIN(
             Set.of(
                     ADMIN_READ,
@@ -32,7 +38,9 @@ public enum Role {
                     EMPLOYEE_READ,
                     EMPLOYEE_UPDATE,
                     EMPLOYEE_DELETE,
-                    EMPLOYEE_CREATE
+                    EMPLOYEE_CREATE,
+                    CLIENT_READ_PROFILE,
+                    CLIENT_VIEW_PRODUCTS
             )
     ),
     MANAGER(
@@ -47,8 +55,7 @@ public enum Role {
                     VALIDATEDEMPLOYEE_CREATE,
                     EMPLOYEE_READ,
                     EMPLOYEE_UPDATE,
-                    EMPLOYEE_DELETE,
-                    EMPLOYEE_CREATE
+                    EMPLOYEE_DELETE
             )
     ),
     VALIDATEDEMPLOYEE(
@@ -59,16 +66,14 @@ public enum Role {
                     VALIDATEDEMPLOYEE_CREATE,
                     EMPLOYEE_READ,
                     EMPLOYEE_UPDATE,
-                    EMPLOYEE_DELETE,
-                    EMPLOYEE_CREATE
+                    EMPLOYEE_DELETE
             )
     ),
     EMPLOYEE(
             Set.of(
                     EMPLOYEE_READ,
                     EMPLOYEE_UPDATE,
-                    EMPLOYEE_DELETE,
-                    EMPLOYEE_CREATE
+                    EMPLOYEE_DELETE
             )
     )
 

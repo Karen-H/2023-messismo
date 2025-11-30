@@ -212,6 +212,7 @@ const OrderFormNew = ({ onCancel }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   const [selectedUnits, setSelectedUnits] = useState(0);
+  const [backendError, setBackendError] = useState("");
 
   const handleSearchChange = (event) => {
     setSearch(event.target.value);
@@ -269,8 +270,6 @@ const OrderFormNew = ({ onCancel }) => {
   };
 
   const orderSubmit = (data) => {
-    console.log("ORDERRRRRR");
-    console.log(data);
     const orderedProducts = formField
       .map((form, index) => {
         const productName = data[`product-${index}`];
@@ -333,13 +332,17 @@ const OrderFormNew = ({ onCancel }) => {
       .addOrders(orderData)
       .then((response) => {
         console.log("Orden enviada con éxito:", response.data);
+        setBackendError("");
         onCancel();
       })
       .catch((error) => {
         console.error("Error al enviar la orden:", error);
+        if (error.response && error.response.data) {
+          setBackendError(error.response.data);
+        } else {
+          setBackendError("Error al enviar la orden");
+        }
       });
-
-    console.log(orderData);
   };
 
   const handleCancelClick = () => {
@@ -460,26 +463,6 @@ const OrderFormNew = ({ onCancel }) => {
         })}
 
         <AddIcon onClick={addField} />
-
-        {/* <div className="form-paymentmethod">
-                    <Label>Payment Method</Label>
-                    <Controller
-                        control={control}
-                        defaultValue=""
-                        {...register('paymentmethod', { required: true })}
-                        render={({ field }) => (
-                            <Select {...field}>
-                                <option value="" disabled></option>
-                                {options.paymentMethods.map(method => (
-                                    <option key={method} value={method}>
-                                        {method}
-                                    </option>
-                                ))}
-                            </Select>
-                        )}
-                    />
-                    {errors.paymentmethod?.type === 'required' && <small className="fail">Field is empty</small>}
-                </div> */}
 
         <div className="form-totalprice">
           <Label>Total</Label>

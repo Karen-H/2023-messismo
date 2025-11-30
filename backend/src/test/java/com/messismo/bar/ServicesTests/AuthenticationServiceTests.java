@@ -55,9 +55,6 @@ public class AuthenticationServiceTests {
         MockitoAnnotations.openMocks(this);
 
         User newEmployee = User.builder().username("martincito").password(passwordEncoder.encode("password")).role(Role.EMPLOYEE).build();
-//        newEmployee.setUsername("martincito");
-//        newEmployee.setPassword(passwordEncoder.encode("password"));
-//        newEmployee.setRole(Role.EMPLOYEE);
         when(userRepository.findByEmail("ramon@gmail.com")).thenReturn(Optional.empty());
         when(userRepository.findByEmail("ramon2@gmail.com")).thenReturn(Optional.ofNullable(newEmployee));
         when(userRepository.findByUsername("martincito")).thenReturn(Optional.empty());
@@ -69,7 +66,7 @@ public class AuthenticationServiceTests {
     @Test
     public void testAuthenticationServiceRegisterEmployee() throws Exception {
 
-        RegisterRequestDTO newRegisterRequest = new RegisterRequestDTO("martincito", "ramon@gmail.com", "password");
+        RegisterRequestDTO newRegisterRequest = new RegisterRequestDTO("martincito", "ramon@gmail.com", "password", "EMPLOYEE");
 
         assertEquals("ramon@gmail.com", authenticationService.register(newRegisterRequest).getEmail());
         assertEquals(Role.EMPLOYEE, authenticationService.register(newRegisterRequest).getRole());
@@ -80,7 +77,7 @@ public class AuthenticationServiceTests {
     @Test
     public void testAuthenticationServiceRegisterEmployee_DuplicatedUsername() {
 
-        RegisterRequestDTO existingRegisterRequest = new RegisterRequestDTO("martincito2", "ramon@gmail.com", "password");
+        RegisterRequestDTO existingRegisterRequest = new RegisterRequestDTO("martincito2", "ramon@gmail.com", "password", "EMPLOYEE");
 
         UserAlreadyExistsException exception = assertThrows(UserAlreadyExistsException.class, () -> {
             authenticationService.register(existingRegisterRequest);
@@ -92,7 +89,7 @@ public class AuthenticationServiceTests {
     @Test
     public void testAuthenticationServiceRegisterEmployee_DuplicatedEmail() {
 
-        RegisterRequestDTO existingRegisterRequest = new RegisterRequestDTO("martincito", "ramon2@gmail.com", "password");
+        RegisterRequestDTO existingRegisterRequest = new RegisterRequestDTO("martincito", "ramon2@gmail.com", "password", "EMPLOYEE");
 
         UserAlreadyExistsException exception = assertThrows(UserAlreadyExistsException.class, () -> {
             authenticationService.register(existingRegisterRequest);
@@ -105,7 +102,7 @@ public class AuthenticationServiceTests {
     void testAuthenticationServiceRegisterEmployee_RuntimeException() {
 
         doThrow(new RuntimeException("Simulated random exception")).when(userRepository).save(any());
-        RegisterRequestDTO request = new RegisterRequestDTO("usuario", "correo@ejemplo.com", "contrasena");
+        RegisterRequestDTO request = new RegisterRequestDTO("usuario", "correo@ejemplo.com", "contrasena", "EMPLOYEE");
 
         Exception exception = assertThrows(Exception.class, () -> {
             authenticationService.register(request);

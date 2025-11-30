@@ -40,7 +40,7 @@ public class AuthenticationControllerTests {
     @Test
     public void testRegister_Success() throws Exception {
 
-        RegisterRequestDTO request = new RegisterRequestDTO("test@example.com", "email", "password");
+        RegisterRequestDTO request = new RegisterRequestDTO("test@example.com", "email", "password", "EMPLOYEE");
         AuthenticationResponseDTO mockResponse = new AuthenticationResponseDTO("mockJwtToken", "mockRefreshToken", "mockEmail", Role.EMPLOYEE);
         when(authenticationService.register(any(RegisterRequestDTO.class))).thenReturn(mockResponse);
         ResponseEntity<?> response = authenticationController.register(request);
@@ -53,7 +53,7 @@ public class AuthenticationControllerTests {
     @Test
     public void testRegister_ConflictMissingData() {
 
-        RegisterRequestDTO request = new RegisterRequestDTO(null, null, null);
+        RegisterRequestDTO request = new RegisterRequestDTO(null, null, null, null);
         ResponseEntity<?> response = authenticationController.register(request);
 
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
@@ -64,7 +64,7 @@ public class AuthenticationControllerTests {
     @Test
     public void testRegister_ConflictUserAlreadyExistsException() throws Exception {
 
-        RegisterRequestDTO request = new RegisterRequestDTO("existing@example.com", "password", "username");
+        RegisterRequestDTO request = new RegisterRequestDTO("existing@example.com", "password", "username", "EMPLOYEE");
         when(authenticationService.register(any(RegisterRequestDTO.class))).thenThrow(new UserAlreadyExistsException("User already exists"));
         ResponseEntity<?> response = authenticationController.register(request);
 
@@ -76,7 +76,7 @@ public class AuthenticationControllerTests {
     @Test
     public void testRegister_InternalServerError() throws Exception {
 
-        RegisterRequestDTO requestDTO = new RegisterRequestDTO("test@example.com", "password", "username");
+        RegisterRequestDTO requestDTO = new RegisterRequestDTO("test@example.com", "password", "username", "EMPLOYEE");
         when(authenticationService.register(requestDTO)).thenThrow(new Exception("Internal error"));
         ResponseEntity<?> response = authenticationController.register(requestDTO);
 

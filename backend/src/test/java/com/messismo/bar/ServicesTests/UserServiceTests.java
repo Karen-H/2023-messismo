@@ -1,5 +1,6 @@
 package com.messismo.bar.ServicesTests;
 
+import com.messismo.bar.DTOs.ClientProfileDTO;
 import com.messismo.bar.DTOs.UserDTO;
 import com.messismo.bar.DTOs.UserIdDTO;
 import com.messismo.bar.Entities.Role;
@@ -7,6 +8,7 @@ import com.messismo.bar.Entities.User;
 import com.messismo.bar.Exceptions.CannotUpgradeToManager;
 import com.messismo.bar.Exceptions.CannotUpgradeToValidatedEmployee;
 import com.messismo.bar.Repositories.UserRepository;
+import com.messismo.bar.Services.PointsService;
 import com.messismo.bar.Services.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class UserServiceTests {
@@ -32,16 +35,49 @@ public class UserServiceTests {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private PointsService pointsService;
+
     @BeforeEach
     public void setUp() {
 
         MockitoAnnotations.openMocks(this);
 
-        User user1 = new User(1L, "admin", "admin@mail.com", "password1", Role.ADMIN);
-        User user2 = new User(2L, "messi2", "messi2@gmail.com", "password123", Role.EMPLOYEE);
-        User user3 = new User(3L, "messi3", "messi3@gmail.com", "password123", Role.EMPLOYEE);
-        User user4 = new User(4L, "messi4", "messi4@gmail.com", "password123", Role.VALIDATEDEMPLOYEE);
-        User user5 = new User(5L, "messi4", "messi4@gmail.com", "password123", Role.EMPLOYEE);
+        User user1 = User.builder()
+            .id(1L)
+            .username("admin")
+            .email("admin@mail.com")
+            .password("password1")
+            .role(Role.ADMIN)
+            .build();
+        User user2 = User.builder()
+            .id(2L)
+            .username("messi2")
+            .email("messi2@gmail.com")
+            .password("password123")
+            .role(Role.EMPLOYEE)
+            .build();
+        User user3 = User.builder()
+            .id(3L)
+            .username("messi3")
+            .email("messi3@gmail.com")
+            .password("password123")
+            .role(Role.EMPLOYEE)
+            .build();
+        User user4 = User.builder()
+            .id(4L)
+            .username("messi4")
+            .email("messi4@gmail.com")
+            .password("password123")
+            .role(Role.VALIDATEDEMPLOYEE)
+            .build();
+        User user5 = User.builder()
+            .id(5L)
+            .username("messi4")
+            .email("messi4@gmail.com")
+            .password("password123")
+            .role(Role.EMPLOYEE)
+            .build();
         List<User> users = new ArrayList<>();
         users.add(user1);
         users.add(user2);
@@ -185,6 +221,119 @@ public class UserServiceTests {
         });
         Assertions.assertEquals("Cannot upgrade to manager", exception.getMessage());
 
+    }
+
+    @Test
+    public void testGetClientProfile_Success() throws Exception {
+        String email = "client@mail.com";
+        User clientUser = User.builder()
+                .id(1L)
+                .username("client1")
+                .email(email)
+                .password("password")
+                .role(Role.CLIENT)
+                .clientId("CLI001")
+                .build();
+        
+        Double currentPoints = 150.0;
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(clientUser));
+        when(pointsService.getCurrentBalance("CLI001")).thenReturn(currentPoints);
+
+        ClientProfileDTO result = userService.getClientProfile(email);
+
+        assertNotNull(result);
+        assertEquals(clientUser.getFunctionalUsername(), result.getUsername());
+        assertEquals(email, result.getEmail());
+        assertEquals("CLI001", result.getClientId());
+        assertEquals(currentPoints, result.getCurrentPoints());
+        
+        verify(userRepository, times(1)).findByEmail(email);
+        verify(pointsService, times(1)).getCurrentBalance("CLI001");
+    }
+
+    @Test
+    public void testGetClientProfile_UserNotFound() {
+        String email = "nonexistent@mail.com";
+        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(Exception.class, () -> {
+            userService.getClientProfile(email);
+        });
+        assertEquals("Error retrieving client profile", exception.getMessage());
+        
+        verify(userRepository, times(1)).findByEmail(email);
+        verify(pointsService, never()).getCurrentBalance(anyString());
+    }
+
+    @Test
+    public void testGetClientProfile_UserIsNotClient() {
+        String email = "employee@mail.com";
+        User employeeUser = User.builder()
+                .id(1L)
+                .username("employee1")
+                .email(email)
+                .password("password")
+                .role(Role.EMPLOYEE)
+                .build();
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(employeeUser));
+
+        Exception exception = assertThrows(Exception.class, () -> {
+            userService.getClientProfile(email);
+        });
+        assertEquals("Error retrieving client profile", exception.getMessage());
+        
+        verify(userRepository, times(1)).findByEmail(email);
+        verify(pointsService, never()).getCurrentBalance(anyString());
+    }
+
+    @Test
+    public void testGetClientProfile_PointsServiceException() throws Exception {
+        String email = "client@mail.com";
+        User clientUser = User.builder()
+                .id(1L)
+                .username("client1")
+                .email(email)
+                .password("password")
+                .role(Role.CLIENT)
+                .clientId("CLI001")
+                .build();
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(clientUser));
+        when(pointsService.getCurrentBalance("CLI001")).thenThrow(new RuntimeException("Points service error"));
+
+        Exception exception = assertThrows(Exception.class, () -> {
+            userService.getClientProfile(email);
+        });
+        assertEquals("Error retrieving client profile", exception.getMessage());
+        
+        verify(userRepository, times(1)).findByEmail(email);
+        verify(pointsService, times(1)).getCurrentBalance("CLI001");
+    }
+
+    @Test
+    public void testGetClientProfile_NullClientId() {
+        String email = "client@mail.com";
+        User clientUser = User.builder()
+                .id(1L)
+                .username("client1")
+                .email(email)
+                .password("password")
+                .role(Role.CLIENT)
+                .clientId(null)
+                .build();
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(clientUser));
+        when(pointsService.getCurrentBalance(null)).thenThrow(new RuntimeException("Null client ID"));
+
+        Exception exception = assertThrows(Exception.class, () -> {
+            userService.getClientProfile(email);
+        });
+        assertEquals("Error retrieving client profile", exception.getMessage());
+        
+        verify(userRepository, times(1)).findByEmail(email);
+        verify(pointsService, times(1)).getCurrentBalance(null);
     }
 }
 

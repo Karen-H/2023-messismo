@@ -68,6 +68,8 @@ public class ValidatedEmployeeController {
             return ResponseEntity.status(HttpStatus.CREATED).body(orderService.addNewOrder(orderRequestDTO));
         } catch (UserNotFoundException | ProductQuantityBelowAvailableStock e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (ClientIdNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
@@ -78,6 +80,17 @@ public class ValidatedEmployeeController {
         try {
             return ResponseEntity.status(HttpStatus.OK).body(orderService.closeOrder(orderIdDTO));
         } catch (OrderNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/closeOrderWithClient")
+    public ResponseEntity<?> closeOrderWithClient(@RequestBody CloseOrderDTO closeOrderDTO) {
+        try {
+            return ResponseEntity.status(HttpStatus.OK).body(orderService.closeOrderWithClient(closeOrderDTO));
+        } catch (OrderNotFoundException | ClientIdNotFoundException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());

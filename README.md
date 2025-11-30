@@ -4,10 +4,39 @@
 
 # Proyecto Integral de Desarrollo
 ## Alumnos:
-##### Baccari Carla,
+####  Baccari Carla,
 ####  Guido Martin,
 ####  Herrmann Karen,
 ### Año: 2023
+
+## Final - Tema 3
+PROGRAMA DE LEALTAD:
+ - Los clientes se pueden registrar.
+ - Al momento de cerrar la cuenta el mozo les pide su número de cliente (o identificación asignada), y si tiene se le asigna una cantidad de puntos en base al consumo realizado.
+ - El manager puede crear "BENEFICIOS", es decir por cierta cantidad de puntos pueden acceder a descuentos o productos gratis. Implementar por lo menos 3 beneficios.
+ - El manager establece cuánto dinero son tantos puntos.
+ - Cada orden queda asignada a un cliente.
+
+## Credenciales de prueba
+- Admin
+    admin@mail.com
+    Password1
+
+- Manager
+    martinguido@gmail.com
+    Password1
+
+- Validated Employee
+    guidomartin7@gmail.com
+    Password1
+
+- Employee
+    michael.davis@example.com
+    Password1
+
+- Customer
+    maria.garcia@client.com
+    Password1
 
 ## INSTRUCCIONES PARA WINDOWS
 1. Descargar e instalar Java SDK 17, se consigue en [Java SDK 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)

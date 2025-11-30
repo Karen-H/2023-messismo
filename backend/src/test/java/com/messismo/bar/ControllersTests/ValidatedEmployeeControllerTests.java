@@ -233,7 +233,7 @@ public class ValidatedEmployeeControllerTests {
     @Test
     public void testAddNewOrder_Success() throws Exception {
 
-        OrderRequestDTO orderRequestDTO = new OrderRequestDTO("employee@example.com",new Date(),List.of(new ProductOrderDTO(new Product(1L,"Product1",10.0,7.0,"Description1",50,new Category(1L,"Category1")), 2)));
+        OrderRequestDTO orderRequestDTO = new OrderRequestDTO("employee@example.com",new Date(),List.of(new ProductOrderDTO(new Product(1L,"Product1",10.0,7.0,"Description1",50,new Category(1L,"Category1")), 2)), null);
         when(orderService.addNewOrder(orderRequestDTO)).thenReturn("Order created successfully");
         ResponseEntity<?> response = validatedEmployeeController.addNewOrder(orderRequestDTO);
 
@@ -245,7 +245,7 @@ public class ValidatedEmployeeControllerTests {
     @Test
     public void testAddNewOrder_Conflict_UserNotFound() throws Exception {
 
-        OrderRequestDTO orderRequestDTO = new OrderRequestDTO("employee@example.com",new Date(),List.of(new ProductOrderDTO(new Product(1L,"Product1",10.0,7.0,"Description1",50,new Category(1L,"Category1")), 2)));
+        OrderRequestDTO orderRequestDTO = new OrderRequestDTO("employee@example.com",new Date(),List.of(new ProductOrderDTO(new Product(1L,"Product1",10.0,7.0,"Description1",50,new Category(1L,"Category1")), 2)), null);
         when(orderService.addNewOrder(orderRequestDTO)).thenThrow(new UserNotFoundException("User not found"));
         ResponseEntity<?> response = validatedEmployeeController.addNewOrder(orderRequestDTO);
 
@@ -257,7 +257,7 @@ public class ValidatedEmployeeControllerTests {
     @Test
     public void testAddNewOrder_Conflict_ProductQuantityBelowAvailableStock() throws Exception {
 
-        OrderRequestDTO orderRequestDTO = new OrderRequestDTO("employee@example.com",new Date(),List.of(new ProductOrderDTO(new Product(1L,"Product1",10.0,7.0,"Description1",50,new Category(1L,"Category1")), 2)));
+        OrderRequestDTO orderRequestDTO = new OrderRequestDTO("employee@example.com",new Date(),List.of(new ProductOrderDTO(new Product(1L,"Product1",10.0,7.0,"Description1",50,new Category(1L,"Category1")), 2)), null);
         when(orderService.addNewOrder(orderRequestDTO)).thenThrow(new ProductQuantityBelowAvailableStock("Product quantity below available stock"));
         ResponseEntity<?> response = validatedEmployeeController.addNewOrder(orderRequestDTO);
 
@@ -269,12 +269,24 @@ public class ValidatedEmployeeControllerTests {
     @Test
     public void testAddNewOrder_InternalServerError() throws Exception {
 
-        OrderRequestDTO orderRequestDTO = new OrderRequestDTO("employee@example.com",new Date(),List.of(new ProductOrderDTO(new Product(1L,"Product1",10.0,7.0,"Description1",50,new Category(1L,"Category1")), 2)));
+        OrderRequestDTO orderRequestDTO = new OrderRequestDTO("employee@example.com",new Date(),List.of(new ProductOrderDTO(new Product(1L,"Product1",10.0,7.0,"Description1",50,new Category(1L,"Category1")), 2)), null);
         when(orderService.addNewOrder(orderRequestDTO)).thenThrow(new Exception("Internal server error"));
         ResponseEntity<?> response = validatedEmployeeController.addNewOrder(orderRequestDTO);
 
         Assertions.assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         Assertions.assertEquals("Internal server error", response.getBody());
+
+    }
+
+    @Test
+    public void testAddNewOrder_NotFound_ClientIdNotFound() throws Exception {
+
+        OrderRequestDTO orderRequestDTO = new OrderRequestDTO("employee@example.com",new Date(),List.of(new ProductOrderDTO(new Product(1L,"Product1",10.0,7.0,"Description1",50,new Category(1L,"Category1")), 2)), 99999L);
+        when(orderService.addNewOrder(orderRequestDTO)).thenThrow(new ClientIdNotFoundException("Client ID 99999 not found"));
+        ResponseEntity<?> response = validatedEmployeeController.addNewOrder(orderRequestDTO);
+
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        Assertions.assertEquals("Client ID 99999 not found", response.getBody());
 
     }
 
@@ -366,8 +378,8 @@ public class ValidatedEmployeeControllerTests {
     public void testGetAllOrders() {
 
         List<Order> mockOrders = Arrays.asList(
-                new Order( new User("user1","user1@mail.com","Password1"), new Date(), List.of(new ProductOrder("Product1",10.0,7.0,new Category(1L,"Category1"), 2)),20.0,14.0),
-                new Order( new User("user1","user1@mail.com","Password1"), new Date(), List.of(new ProductOrder("Product2",30.0,10.0,new Category(2L,"Category2"), 3)),90.0,30.0)
+                new Order( User.builder().username("user1").email("user1@mail.com").password("Password1").build(), new Date(), List.of(new ProductOrder("Product1",10.0,7.0,new Category(1L,"Category1"), 2)),20.0,14.0),
+                new Order( User.builder().username("user1").email("user1@mail.com").password("Password1").build(), new Date(), List.of(new ProductOrder("Product2",30.0,10.0,new Category(2L,"Category2"), 3)),90.0,30.0)
         );
         when(orderService.getAllOrders()).thenReturn(mockOrders);
         ResponseEntity<?> response = validatedEmployeeController.getAllOrders();

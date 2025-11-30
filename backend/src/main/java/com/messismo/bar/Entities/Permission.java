@@ -23,7 +23,9 @@ public enum Permission {
     EMPLOYEE_READ("employee:read"),
     EMPLOYEE_UPDATE("employee:update"),
     EMPLOYEE_CREATE("employee:create"),
-    EMPLOYEE_DELETE("employee:delete")
+    EMPLOYEE_DELETE("employee:delete"),
+    CLIENT_READ_PROFILE("client:read:profile"),
+    CLIENT_VIEW_PRODUCTS("client:view:products")
     ;
     @Getter
     private final String permission;

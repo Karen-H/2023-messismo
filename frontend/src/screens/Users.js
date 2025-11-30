@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import "../Resources.css";
+import "../Users.css";
 import { useSelector, useDispatch } from "react-redux";
-// import { acceptUser, rejectUser, deleteUser } from '../redux/userSlice';
 import { validateUser, upgradeUser } from "../redux/userSlice";
 import Navbar from "../components/Navbar";
 import userService from "../services/user.service";
@@ -25,7 +24,9 @@ const Container = styled.div`
   flex-direction: column; */
 `;
 
-const MainContent = styled.div`
+const MainContent = styled.div.withConfig({
+    shouldForwardProp: (prop) => prop !== 'visible',
+})`
   display: ${(props) => (props.visible ? "" : "none")};
   padding: 3rem;
 
@@ -184,13 +185,14 @@ const Subheader = styled.h2`
   margin-left: 10px;
 `;
 
-function Resources() {
+function Users() {
   const [randomImage, setRandomImage] = useState(null);
 
   const { user: currentUser } = useSelector((state) => state.auth);
   const clicked = useSelector((state) => state.navigation.clicked);
 
   const [allEmployees, setAllEmployees] = useState([]);
+  const [allClients, setAllClients] = useState([]);
   const actualUserRole = currentUser.role;
   const [isLoading, setIsLoading] = useState(true);
 
@@ -208,6 +210,16 @@ function Resources() {
         console.error("Error al obtener la lista de empleados:", error);
         setIsLoading(false);
       });
+
+    employeeService
+      .getAllClients()
+      .then((response) => {
+        const clients = response.data;
+        setAllClients(clients);
+      })
+      .catch((error) => {
+        console.error("Error al obtener la lista de clientes:", error);
+      });
   }, []);
 
   useEffect(() => {
@@ -215,29 +227,27 @@ function Resources() {
     setRandomImage(userimages[randomIndex]);
   }, []);
 
-  const handleValidate = (id) => {
-    employeeService.validateEmployee(id);
-    window.location.reload();
-    //dispatch(validateUser(id))
+  const handleValidate = async (id) => {
+    try {
+      await employeeService.validateEmployee(id);
+      window.location.reload();
+    } catch (error) {
+      console.error("Error validating employee:", error);
+    }
   };
 
-  const handleUpgrade = (id) => {
-    //dispatch(upgradeUser(id))
-    employeeService.validateAdmin(id);
-    window.location.reload();
+  const handleUpgrade = async (id) => {
+    try {
+      await employeeService.validateAdmin(id);
+      window.location.reload();
+    } catch (error) {
+      console.error("Error upgrading employee:", error);
+    }
   };
 
   const isAdminOrManager = currentUser && (currentUser.role === "MANAGER" || currentUser.role === "ADMIN");
 
   const contentVisible = !clicked;
-
-  // const handleReject = (id) => {
-  //     dispatch(rejectUser(id))
-  // };
-
-  // const handleDelete = (id) => {
-  //     dispatch(deleteUser(id))
-  // };
 
   if (!currentUser) {
     return <Navigate to="/" />;
@@ -307,6 +317,25 @@ function Resources() {
       </div>
   )};
 
+  const renderClient = (user) => {
+
+    const randomIndex = Math.floor(Math.random() * userimages.length);
+    const randomImage = userimages[randomIndex];
+
+    return(
+      <div key={user.id} className="card">
+
+        <UserImage src={randomImage} alt={`User ${user.clientId}`} />
+
+        <div className="card-body">
+          <h2 className="card-username">{user.username}</h2>
+          <p className="card-email">{user.email}</p>
+          <p className="card-email">Client ID: {user.clientId}</p>
+        </div>
+
+      </div>
+  )};
+
   return (
     <Container>
       <Navbar />
@@ -360,6 +389,14 @@ function Resources() {
               </Resource>
             </UserItem>
           )}
+          {allClients.length > 0 && (
+            <UserItem>
+              <Subheader>Clients</Subheader>
+              <Resource>
+                {allClients.map(renderClient)}
+              </Resource>
+            </UserItem>
+          )}
         </UserContainer>
       )}
       </MainContent>
@@ -367,4 +404,4 @@ function Resources() {
   );
 }
 
-export default Resources;
+export default Users;

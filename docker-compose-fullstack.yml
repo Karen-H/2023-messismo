@@ -1,0 +1,35 @@
+services:
+  messismo_backend:
+    container_name: messismo_backend_local
+    image: messismo_backend_local
+    platform: linux/amd64
+    build: ./backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_APPLICATION_JSON: '{
+        "spring.profiles.active": "test",
+        "spring.h2.console.enabled": "true",
+        "spring.h2.console.path": "/h2-console",
+        "spring.h2.console.settings.web-allow-others": "true",
+        "spring.datasource.url": "jdbc:h2:mem:test",
+        "spring.datasource.driverClassName": "org.h2.Driver",
+        "spring.datasource.username": "sa",
+        "spring.datasource.password": "password",
+        "spring.jpa.database-platform": "org.hibernate.dialect.H2Dialect",
+        "spring.jpa.generate-ddl": "true",
+        "spring.jpa.hibernate.ddl-auto": "create-drop",
+        "logging.level.org.springframework.security": "DEBUG"
+      }'
+
+  messismo_frontend:
+    container_name: messismo_frontend_local
+    image: messismo_frontend_local
+    platform: linux/amd64
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - messismo_backend
+    environment:
+      - REACT_APP_BACKEND_URL=http://localhost:8080

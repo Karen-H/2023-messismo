@@ -20,4 +20,6 @@ public class OrderRequestDTO {
 
     private List<ProductOrderDTO> productOrders;
 
+    private Long clientId;
+
 }

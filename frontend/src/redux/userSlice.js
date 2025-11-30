@@ -16,28 +16,6 @@ const userSlice = createSlice({
   name: 'users',
   initialState,
   reducers: {
-
-    // acceptUser: (state, action) => {
-    //   const userFound = state.find(user => user.id === action.payload)
-    //   if(userFound){
-    //     userFound.pending = 'no'
-    //   }
-    // },
-
-    // rejectUser: (state, action) => {
-    //   const userFound = state.find(user => user.id === action.payload)
-    //   if(userFound){
-    //     state.splice(state.indexOf(userFound), 1)
-    //   }
-    // },
-
-    // deleteUser: (state, action) => {
-    //   const userFound = state.find(user => user.id === action.payload)
-    //   if(userFound){
-    //     state.splice(state.indexOf(userFound), 1)
-    //   }
-    // }
-
     validateUser: (state, action) => {
       const userFound = state.find(user => user.id === action.payload)
       if(userFound){
@@ -55,6 +33,5 @@ const userSlice = createSlice({
   },
 });
 
-// export const { acceptUser, rejectUser, deleteUser } = userSlice.actions
 export const { validateUser, upgradeUser } = userSlice.actions
 export default userSlice.reducer;

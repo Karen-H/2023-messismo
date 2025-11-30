@@ -58,7 +58,9 @@ const Button = styled.button`
   }
 `;
 
-const MainContent = styled.div`
+const MainContent = styled.div.withConfig({
+    shouldForwardProp: (prop) => prop !== 'visible',
+})`
   display: ${(props) => (props.visible ? "" : "none")};
   width: 100%;
   margin: auto;
@@ -90,7 +92,9 @@ const ModalContent = styled.div`
   overflow-y: auto;
 `;
 
-const OrdersTable = styled.div``;
+const OrdersTable = styled.div.withConfig({
+    shouldForwardProp: (prop) => !['sx'].includes(prop),
+})``;
 
 const Details = styled.div`
   display: flex;
@@ -121,7 +125,7 @@ const DetailsContent = styled.div`
     font-family: "Roboto";
     font-size: 1.5rem;
   }
-  strong2{
+  strong{
     color: white;
     font-family: 'Roboto';
     font-size: 1.7rem;
@@ -189,18 +193,22 @@ const MoreDetails = styled(MdFastfood)`
 
 const MOBILE_COLUMNS = {
   id: true,
+  clientId: false,
   dateCreated: true,
   totalPrice: true,
   details: true,
   status: true,
+  points: true,
 };
 const ALL_COLUMNS = {
   id: true,
   username: true,
+  clientId: true,
   dateCreated: true,
   totalPrice: true,
   details: true,
   status: true,
+  points: true,
 };
 
 function Orders() {
@@ -223,6 +231,7 @@ function Orders() {
   const [alertText, setAlertText] = useState("");
   const [isOperationSuccessful, setIsOperationSuccessful] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [conversionRate, setConversionRate] = useState(100);
 
   const theme = useTheme();
   const matches = useMediaQuery(theme.breakpoints.up("sm"));
@@ -233,9 +242,7 @@ function Orders() {
     setColumnVisible(newColumns);
   }, [matches]);
 
-  useEffect(() => {
-    console.log("holis",selectedOrderDetails);
-  }, [selectedOrderDetails])
+
 
   useEffect(() => {
     ordersService
@@ -243,13 +250,27 @@ function Orders() {
       .then((response) => {
         setOrders(response.data);
         setIsLoading(false);
-        console.log("done");
       })
       .catch((error) => {
         console.error("Error al mostrar las ordenes", error);
         setIsLoading(false);
       });
-  }, [isOrderFormVisible, open, isEditFormVisible, openEditForm]);
+
+    // Load current conversion rate
+    fetch("http://localhost:8080/settings/points-conversion", {
+      headers: {
+        "Authorization": "Bearer " + currentUser.access_token,
+        "Content-Type": "application/json"
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      setConversionRate(data.conversionRate);
+    })
+    .catch(error => {
+      console.error("Error al cargar tasa de conversión", error);
+    });
+  }, [isOrderFormVisible, open, isEditFormVisible, openEditForm, currentUser.access_token]);
 
   useEffect(() => {
     ordersService
@@ -257,7 +278,6 @@ function Orders() {
       .then((response) => {
         setOrders(response.data);
         setIsLoading(false);
-        console.log("done");
       })
       .catch((error) => {
         console.error("Error al mostrar las ordenes", error);
@@ -312,16 +332,49 @@ function Orders() {
     setIsLoading(true);
   };
 
-  const rows = orders.map((order) => ({
-    id: order.id,
-    username: order.user.username,
-    dateCreated: order.dateCreated,
-    totalPrice: order.totalPrice.toLocaleString("en-US", {
-      style: "currency",
-      currency: "USD",
-    }),
-    status: order.status,
-  }));
+  const rows = orders.map((order) => {
+    const isClosed = order.status && order.status === "Closed";
+    let points = "0.00";
+    
+    if (isClosed && order.clientId) {
+      if (order.pointsEarned) {
+        points = order.pointsEarned.toFixed(2);
+      } else {
+        points = (order.totalPrice / 100).toFixed(2);
+      }
+    }
+    
+    // Formatear nombre del beneficio
+    let benefitName = null;
+    if (order.appliedBenefit) {
+      const benefit = order.appliedBenefit;
+      if (benefit.type === "DISCOUNT") {
+        if (benefit.discountType === "PERCENTAGE") {
+          benefitName = `${benefit.discountValue}% OFF`;
+        } else {
+          benefitName = `$${benefit.discountValue} OFF`;
+        }
+      } else if (benefit.type === "FREE_PRODUCT") {
+        // Para productos gratis, idealmente mostrar el nombre del producto
+        benefitName = `Free Product`;
+      }
+    }
+
+    return {
+      id: order.id,
+      username: order.user.username,
+      clientId: order.clientId,
+      dateCreated: order.dateCreated,
+      totalPrice: order.totalPrice.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
+      }),
+      status: order.status,
+      points: points,
+      pointsUsed: (order.pointsUsed || 0).toFixed(2),
+      benefitName: benefitName,
+    };
+  });
 
   const columns = [
     {
@@ -341,6 +394,18 @@ function Orders() {
       headerAlign: "center",
       sortable: true,
       minWidth: 150,
+    },
+    {
+      field: "clientId",
+      headerName: "Client",
+      flex: 1,
+      align: "center",
+      headerAlign: "center",
+      sortable: true,
+      minWidth: 100,
+      renderCell: (params) => (
+        params.row.clientId ? params.row.clientId : "N/A"
+      ),
     },
     {
       field: "dateCreated",
@@ -371,7 +436,6 @@ function Orders() {
       sortable: false,
       renderCell: (params) => (
         <VisibilityIcon onClick={() => handleViewDetails(params.row.id)} />
-        //<MoreDetails onClick={() => handleViewDetails(params.row.id)} />
       ),
     },
     {
@@ -402,7 +466,6 @@ function Orders() {
           color: fontColor,
           textAlign: "center",
           padding: "8px",
-          //borderRadius: '4px',
           fontSize: "0.9rem",
           textTransform: "none",
           width: "50%",
@@ -421,6 +484,50 @@ function Orders() {
           </Fab>
         );
       },
+    },
+    {
+      field: "points",
+      headerName: "Points Earned",
+      flex: 1,
+      align: "center",
+      headerAlign: "center",
+      sortable: true,
+      minWidth: 120,
+      renderCell: (params) => {
+        return (
+          <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#4caf50' }}>
+            +{params.value}
+          </Typography>
+        );
+      },
+    },
+    {
+      field: "pointsUsed",
+      headerName: "Points Used",
+      flex: 1,
+      align: "center",
+      headerAlign: "center",
+      sortable: true,
+      minWidth: 120,
+      renderCell: (params) => {
+        return (
+          <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#f44336' }}>
+            -{params.value || '0.00'}
+          </Typography>
+        );
+      },
+    },
+    {
+      field: "benefitName",
+      headerName: "Benefit",
+      flex: 1,
+      align: "center",
+      headerAlign: "center",
+      sortable: true,
+      minWidth: 150,
+      renderCell: (params) => (
+        params.row.benefitName || "N/A"
+      ),
     },
     {
       field: "edit",
@@ -459,7 +566,7 @@ function Orders() {
           </Button>
         )}
 
-        <div visible={contentVisible}>
+        <div>
           <Modal open={isOrderFormVisible}>
             <ModalContent>
               {isOrderFormVisible && (
@@ -500,9 +607,16 @@ function Orders() {
                     <Typography
                       variant="h3"
                       component="h3"
-                      sx={{ textAlign: "center", mt: 3, mb: 3, color: "white" }}
+                      sx={{ textAlign: "center", mt: 3, mb: 1, color: "white" }}
                     >
                       Orders
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      component="p"
+                      sx={{ textAlign: "center", mb: 3, color: "white", fontSize: "0.9rem" }}
+                    >
+                      Current conversion: ${conversionRate} = 1 point
                     </Typography>
                     <DataGrid
                       initialState={{
@@ -511,14 +625,12 @@ function Orders() {
                           sortModel: [{ field: "dateCreated", sort: "desc" }],
                         },
                       }}
-                      sx={{ fontSize: "1rem" }}
                       autoHeight={true}
                       columns={columns}
                       columnVisibilityModel={columnVisible}
                       rows={rows}
                       getRowId={(row) => row.id}
                       pageSizeOptions={[5, 10, 25]}
-                      //rowsPerPageOptions={[5, 10, 25]}
                       pagination
                       pageSize={pageSize}
                       onPageSizeChange={(newPageSize) =>
@@ -529,6 +641,7 @@ function Orders() {
                         bottom: params.isLastVisible ? 0 : 5,
                       })}
                       sx={{
+                        fontSize: "1rem",
                         border: 2,
                         borderColor: "#a4d4cc",
                         "& .MuiButtonBase-root": {
@@ -602,7 +715,7 @@ function Orders() {
                         <br />
                       </div>
                     ))}
-                    <strong2 style={{ color: "white" }}>Total price: ${selectedTotalPrice}</strong2>
+                    <strong style={{ color: "white" }}>Total price: ${selectedTotalPrice}</strong>
 
                     <DetailsButton onClick={() => handleCloseDetails()}>
                       Close

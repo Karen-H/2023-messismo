@@ -79,14 +79,25 @@ const AcceptLink = styled(Link)`
     }
 `;
 
-const SignUpPopUp = ({isRegistered, setSignUpPopUp}) => {
+const SignUpPopUp = ({isRegistered, setSignUpPopUp, userType}) => {
+    const getTitle = () => {
+        if (isRegistered) return 'An account is already registered';
+        return userType === 'CLIENT' ? 'Registration Successful!' : 'Pending confirmation';
+    };
+
+    const getSubtitle = () => {
+        if (isRegistered) return 'with your email address';
+        return userType === 'CLIENT' ? 
+            'You can now log in to your account' : 
+            'An admin needs to approve this request';
+    };
 
     return (
         <PopUp>
 
             <Content>
-                <h1>{isRegistered ? 'An account is already registered' : 'Pending confirmation'}</h1>
-                <h4>{isRegistered ? 'with your email address' : 'An admin needs to approve this request'}</h4>
+                <h1>{getTitle()}</h1>
+                <h4>{getSubtitle()}</h4>
                 <AcceptLink onClick={ () => setSignUpPopUp(false) }> Accept </AcceptLink>
             </Content>
 

@@ -209,6 +209,7 @@ const OrderForm = ({ onCancel }) => {
   });
   const [selectedProductNames, setSelectedProductNames] = useState([]);
   const [search, setSearch] = useState(""); // Estado para almacenar el término de búsqueda
+  const [backendError, setBackendError] = useState("");
 
   const handleSearchChange = (event) => {
     setSearch(event.target.value);
@@ -317,45 +318,6 @@ const OrderForm = ({ onCancel }) => {
                 return null;
             }
         }).filter(product => product !== null);
-
-        const totalPrice = orderedProducts.reduce((total, product) => {
-            return total + product.unitPrice * product.amount;
-        }, 0);
-
-        const totalCost = orderedProducts.reduce((total, product) => {
-            console.log(product);
-            return total + product.unitCost * product.amount;
-        }, 0);
-
-        const orderData = {
-            registeredEmployeeEmail: currentUser.email,
-            dateCreated: new Date().toISOString(),
-            productOrders: orderedProducts.map(product => ({
-              product: {
-                productId: product.id,
-                name: product.name,
-                unitPrice: product.unitPrice,
-                description: product.description,
-                stock: product.stock,
-                category: product.category,
-                unitCost: product.unitCost,
-              },
-              quantity: product.amount
-            })),
-            totalPrice: totalPrice.toFixed(2),
-            totalCost: totalCost.toFixed(2),
-        };
-
-        ordersService.addOrders(orderData)
-        .then(response => {
-          console.log("Orden enviada con éxito:", response.data);
-          onCancel();
-        })
-        .catch(error => {
-          console.error("Error al enviar la orden:", error);
-        });
-
-        console.log(orderData);
     };
 
     const totalCost = orderedProducts.reduce((total, product) => {
@@ -386,13 +348,17 @@ const OrderForm = ({ onCancel }) => {
       .addOrders(orderData)
       .then((response) => {
         console.log("Orden enviada con éxito:", response.data);
+        setBackendError("");
         onCancel();
       })
       .catch((error) => {
         console.error("Error al enviar la orden:", error);
+        if (error.response && error.response.data) {
+          setBackendError(error.response.data);
+        } else {
+          setBackendError("Error al enviar la orden");
+        }
       });
-
-    console.log(orderData);
   };
 
   const handleCancelClick = () => {

@@ -25,7 +25,7 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Missing userId to upgrade to manager");
         }
         try {
-            return ResponseEntity.status(HttpStatus.OK).body(userService.validateEmployee(userIdDTO));
+            return ResponseEntity.status(HttpStatus.OK).body(userService.validateManager(userIdDTO));
         } catch (UsernameNotFoundException | CannotUpgradeToManager e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         } catch (Exception e) {

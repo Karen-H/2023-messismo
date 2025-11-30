@@ -98,6 +98,9 @@ function Login() {
         ) {
           navigate("/homepage");
         }
+        if (userRole === "CLIENT") {
+          navigate("/client-home");
+        }
         if (userRole === "EMPLOYEE") {
           setIsRegistered(true);
           setSignInPopUp(true);
@@ -116,6 +119,10 @@ function Login() {
       currentUser.role === "VALIDATEDEMPLOYEE")
   ) {
     return <Navigate to="/homepage" />;
+  }
+
+  if (isLoggedIn && currentUser.role === "CLIENT") {
+    return <Navigate to="/client-home" />;
   }
 
   const handleSignInInput = (e) => {
@@ -303,24 +310,26 @@ function Login() {
                 )}
               </div>
 
-              <Link
+              <button
+                type="button"
                 className="btn flx"
                 onClick={() => {
-                  handleSignInValidation();
-                  if (isSignInValid) {
+                  const validationErrors = signinvalidation(signinvalues);
+                  setSignInErrors(validationErrors);
+                  
+                  if (Object.keys(validationErrors).length === 0) {
                     const userData = {
                       email: signinvalues.email,
                       password: signinvalues.password,
                     };
                     handleLogin(userData);
+                  } else {
+                    handleSnackClick();
                   }
                 }}
-                disabled={
-                  Object.keys(signinerrors).length > 0 || !isSignInValid
-                }
               >
                 <span>Sign In</span>
-              </Link>
+              </button>
 
               <span className="forgotPassword">
                 <ForgotPassword
@@ -584,8 +593,15 @@ function Login() {
               </Dialog>
             </form>
           </div>
+          
+          <div className="mobileFooter flx">
+            <span className="text">Don't have an account?</span>
+            <Link to={"/register"}>
+              <button className="btn">Sign Up</button>
+            </Link>
+          </div>
 
-          <div className="imageDiv">
+          <div className="imageDiv flx">
             <img src={image} className="imag"></img>
 
             <div className="textDiv">

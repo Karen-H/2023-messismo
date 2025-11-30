@@ -4,6 +4,7 @@ import com.messismo.bar.DTOs.*;
 import com.messismo.bar.Entities.*;
 import com.messismo.bar.Repositories.*;
 import com.messismo.bar.Services.*;
+import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Calendar;
@@ -22,7 +24,7 @@ import java.util.List;
 public class InitialConfiguration {
 
     @Bean
-    public CommandLineRunner commandLineRunner(AuthenticationService authenticationService, UserRepository userRepository, ProductService productService, CategoryService categoryService, OrderService orderService, OrderRepository orderRepository, ProductRepository productRepository, GoalService goalService) {
+    public CommandLineRunner commandLineRunner(AuthenticationService authenticationService, UserRepository userRepository, ProductService productService, CategoryService categoryService, OrderService orderService, OrderRepository orderRepository, ProductRepository productRepository, GoalService goalService, PointsService pointsService, BenefitService benefitService) {
         return args -> {
             RegisterRequestDTO admin = new RegisterRequestDTO();
             admin.setUsername("admin");
@@ -35,16 +37,24 @@ public class InitialConfiguration {
             System.out.println("ADDED ADMIN");
             addSampleEmployees(authenticationService, userRepository);
             System.out.println("ADDED EMPLOYEES");
+            addSampleClients(authenticationService, userRepository);
+            System.out.println("ADDED CLIENTS");
             addSampleCategories(categoryService);
             System.out.println("ADDED CATEGORIES");
             addSampleProducts(productService);
             System.out.println("ADDED PRODUCTS");
+            addSampleBenefits(benefitService, productRepository);
+            System.out.println("ADDED BENEFITS");
             addSampleOrders(orderService, productRepository);
             System.out.println("ADDED ORDERS");
-            closeOrders(orderRepository);
+            closeOrders(orderRepository, pointsService);
             System.out.println("CLOSED ORDERS");
             addSampleGoals(goalService);
             System.out.println("ADDED GOALS");
+            addOrdersWithClientIds(orderService, userRepository, productRepository, orderRepository);
+            System.out.println("ADDED ORDERS WITH CLIENT IDS");
+            migrateExistingClientPoints(userRepository, orderRepository, pointsService);
+            System.out.println("MIGRATED EXISTING CLIENT POINTS");
             System.out.println("FINISH INITIAL LOADING");
         };
     }
@@ -76,12 +86,28 @@ public class InitialConfiguration {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         return dateFormat.parse(date);
     }
-    private void closeOrders(OrderRepository orderRepository) {
+    private void closeOrders(OrderRepository orderRepository, PointsService pointsService) {
         List<Order> allOrders = orderRepository.findAll();
         LocalDate cutoffDate = LocalDate.of(2023, 10, 1);
         for(Order order : allOrders){
             if (order.getDateCreated().toInstant().atZone(ZoneId.systemDefault()).toLocalDate().isBefore(cutoffDate)) {
                 order.setStatus("Closed");
+                
+                // Calcular y guardar pointsEarned para órdenes con clientId
+                if (order.getClientId() != null) {
+                    try {
+                        Double pointsEarned = pointsService.calculatePointsForAmount(order.getTotalPrice());
+                        order.setPointsEarned(pointsEarned);
+                        System.out.println("Calculated points for order " + order.getId() + ": " + pointsEarned);
+                    } catch (Exception e) {
+                        System.out.println("Error calculating points for order " + order.getId() + ": " + e.getMessage());
+                        // Usar tasa fija temporal de 100 si no está configurada
+                        Double pointsEarned = order.getTotalPrice() / 100.0;
+                        order.setPointsEarned(pointsEarned);
+                        System.out.println("Used fallback calculation for order " + order.getId() + ": " + pointsEarned);
+                    }
+                }
+                
                 orderRepository.save(order);
             }
         }
@@ -210,7 +236,13 @@ public class InitialConfiguration {
     private void generateOrderRequestDTO(OrderService orderService, String userEmail, String stringDate, List<ProductOrderDTO> productOrderDTO) throws Exception {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date date = dateFormat.parse(stringDate);
-        orderService.addNewOrder(OrderRequestDTO.builder().registeredEmployeeEmail(userEmail).dateCreated(date).productOrders(productOrderDTO).build());
+        orderService.addNewOrder(OrderRequestDTO.builder().registeredEmployeeEmail(userEmail).dateCreated(date).productOrders(productOrderDTO).clientId(null).build());
+    }
+
+    private void generateOrderRequestDTO(OrderService orderService, String userEmail, String stringDate, List<ProductOrderDTO> productOrderDTO, Long clientId) throws Exception {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date date = dateFormat.parse(stringDate);
+        orderService.addNewOrder(OrderRequestDTO.builder().registeredEmployeeEmail(userEmail).dateCreated(date).productOrders(productOrderDTO).clientId(clientId).build());
     }
 
     private void addSampleEmployees(AuthenticationService authenticationService, UserRepository userRepository) throws Exception {
@@ -242,6 +274,157 @@ public class InitialConfiguration {
         authenticationService.register(user5);
         RegisterRequestDTO user6 = RegisterRequestDTO.builder().username("jane_doe").email("jane.doe@example.com").password("Password1").build();
         authenticationService.register(user6);
+    }
+
+    private void addSampleClients(AuthenticationService authenticationService, UserRepository userRepository) throws Exception {
+        RegisterRequestDTO client1 = RegisterRequestDTO.builder()
+                .username("maria_garcia")
+                .email("maria.garcia@client.com")
+                .password("Password1")
+                .userType("CLIENT")
+                .build();
+        authenticationService.register(client1);
+
+        RegisterRequestDTO client2 = RegisterRequestDTO.builder()
+                .username("carlos_rodriguez")
+                .email("carlos.rodriguez@client.com")
+                .password("Password1")
+                .userType("CLIENT")
+                .build();
+        authenticationService.register(client2);
+
+        RegisterRequestDTO client3 = RegisterRequestDTO.builder()
+                .username("ana_martinez")
+                .email("ana.martinez@client.com")
+                .password("Password1")
+                .userType("CLIENT")
+                .build();
+        authenticationService.register(client3);
+
+        RegisterRequestDTO client4 = RegisterRequestDTO.builder()
+                .username("diego_lopez")
+                .email("diego.lopez@client.com")
+                .password("Password1")
+                .userType("CLIENT")
+                .build();
+        authenticationService.register(client4);
+
+        RegisterRequestDTO client5 = RegisterRequestDTO.builder()
+                .username("sofia_perez")
+                .email("sofia.perez@client.com")
+                .password("Password1")
+                .userType("CLIENT")
+                .build();
+        authenticationService.register(client5);
+
+        RegisterRequestDTO client6 = RegisterRequestDTO.builder()
+                .username("miguel_sanchez")
+                .email("miguel.sanchez@client.com")
+                .password("Password1")
+                .userType("CLIENT")
+                .build();
+        authenticationService.register(client6);
+
+        RegisterRequestDTO client7 = RegisterRequestDTO.builder()
+                .username("laura_torres")
+                .email("laura.torres@client.com")
+                .password("Password1")
+                .userType("CLIENT")
+                .build();
+        authenticationService.register(client7);
+
+        RegisterRequestDTO client8 = RegisterRequestDTO.builder()
+                .username("roberto_flores")
+                .email("roberto.flores@client.com")
+                .password("Password1")
+                .userType("CLIENT")
+                .build();
+        authenticationService.register(client8);
+    }
+
+    private void addOrdersWithClientIds(OrderService orderService, UserRepository userRepository, ProductRepository productRepository, OrderRepository orderRepository) throws Exception {
+        var mariaUser = userRepository.findByEmail("maria.garcia@client.com");
+        var carlosUser = userRepository.findByEmail("carlos.rodriguez@client.com");
+        var anaUser = userRepository.findByEmail("ana.martinez@client.com");
+        var diegoUser = userRepository.findByEmail("diego.lopez@client.com");
+        var sofiaUser = userRepository.findByEmail("sofia.perez@client.com");
+        
+        if (mariaUser.isEmpty() || carlosUser.isEmpty() || anaUser.isEmpty() || 
+            diegoUser.isEmpty() || sofiaUser.isEmpty()) {
+            return;
+        }
+        
+        Long mariaClientId = Long.parseLong(mariaUser.get().getClientId());
+        Long carlosClientId = Long.parseLong(carlosUser.get().getClientId());
+        Long anaClientId = Long.parseLong(anaUser.get().getClientId());
+        Long diegoClientId = Long.parseLong(diegoUser.get().getClientId());
+        Long sofiaClientId = Long.parseLong(sofiaUser.get().getClientId());
+
+        // Crear órdenes sin clientId
+        generateOrderRequestDTO(orderService, "martinguido@gmail.com", "2023-11-01 12:30:00", 
+            List.of(ProductOrderDTO.builder().product(productRepository.findByName("Margherita Pizza").get()).quantity(2).build(), 
+                   ProductOrderDTO.builder().product(productRepository.findByName("Lemon Mojito").get()).quantity(1).build()));
+
+        generateOrderRequestDTO(orderService, "john.smith@example.com", "2023-11-02 14:15:30", 
+            List.of(ProductOrderDTO.builder().product(productRepository.findByName("Caesar Salad").get()).quantity(1).build(), 
+                   ProductOrderDTO.builder().product(productRepository.findByName("Tiramisu").get()).quantity(2).build()));
+
+        generateOrderRequestDTO(orderService, "sarah.jones@example.com", "2023-11-03 18:45:15", 
+            List.of(ProductOrderDTO.builder().product(productRepository.findByName("Veal Milanese with Fries").get()).quantity(1).build(), 
+                   ProductOrderDTO.builder().product(productRepository.findByName("Craft Beer").get()).quantity(2).build()));
+
+        generateOrderRequestDTO(orderService, "martinguido@gmail.com", "2023-11-04 16:20:00", 
+            List.of(ProductOrderDTO.builder().product(productRepository.findByName("Shrimp Ceviche").get()).quantity(1).build(), 
+                   ProductOrderDTO.builder().product(productRepository.findByName("Craft Beer").get()).quantity(1).build()));
+
+        generateOrderRequestDTO(orderService, "john.smith@example.com", "2023-11-05 19:30:15", 
+            List.of(ProductOrderDTO.builder().product(productRepository.findByName("Italian Antipasto").get()).quantity(1).build(), 
+                   ProductOrderDTO.builder().product(productRepository.findByName("Caesar Salad").get()).quantity(1).build()));
+
+        // Obtener las últimas 20 órdenes creadas y cerrarlas con clientId
+        List<Order> allOrders = orderRepository.findAll();
+        List<Order> lastOrders = allOrders.subList(Math.max(0, allOrders.size() - 20), allOrders.size());
+        
+        Long[] clientIds = {mariaClientId, carlosClientId, anaClientId, diegoClientId, sofiaClientId, 
+        mariaClientId, carlosClientId, anaClientId, diegoClientId, sofiaClientId,
+        mariaClientId, carlosClientId, anaClientId, diegoClientId, sofiaClientId,
+        mariaClientId, carlosClientId, anaClientId, diegoClientId, sofiaClientId};
+        
+        for (int i = 0; i < lastOrders.size(); i++) {
+            Order order = lastOrders.get(i);
+            order.setClientId(clientIds[i]);
+            order.setStatus("Closed");
+            orderRepository.save(order);
+        }
+    }
+
+    private void migrateExistingClientPoints(UserRepository userRepository, OrderRepository orderRepository, PointsService pointsService) {
+        // Obtener todos los clientes
+        List<User> clients = userRepository.findAll().stream()
+            .filter(User::isClient)
+            .toList();
+        
+        for (User client : clients) {
+            try {
+                // Crear cuenta de puntos si no existe
+                if (pointsService.getPointsAccount(client.getClientId()).isEmpty()) {
+                    pointsService.createPointsAccount(client.getClientId());
+                }
+                
+                // Calcular puntos de órdenes cerradas existentes
+                List<Order> clientOrders = orderRepository.findByClientId(Long.parseLong(client.getClientId()));
+                Double totalPoints = clientOrders.stream()
+                    .filter(order -> "Closed".equals(order.getStatus()))
+                    .mapToDouble(order -> order.getTotalPrice() / 100.0)
+                    .sum();
+                
+                if (totalPoints > 0) {
+                    pointsService.migrateExistingPoints(client.getClientId(), totalPoints);
+                }
+            } catch (Exception e) {
+                System.err.println("Error migrating points for client " + client.getClientId() + ": " + e.getMessage());
+            }
+        }
     }
 
     private void addSampleCategories(CategoryService categoryService) throws Exception {
@@ -303,4 +486,129 @@ public class InitialConfiguration {
         ProductDTO drink6 = ProductDTO.builder().name("Chinese Tea").description("Chinese tea with mint").category("Drink").unitPrice(5500.00).stock(150).unitCost(500.00).newCategory(false).build();
         productService.addProduct(drink6);
     }
+
+    private void addSampleBenefits(BenefitService benefitService, ProductRepository productRepository) {
+        try {
+            // Monday: 100% off using 10 points
+            BenefitRequestDTO mondayDiscount = BenefitRequestDTO.builder()
+                    .type(Benefit.BenefitType.DISCOUNT)
+                    .pointsRequired(10)
+                    .discountType(Benefit.DiscountType.PERCENTAGE)
+                    .discountValue(100.0)
+                    .applicableDays(Arrays.asList("MONDAY"))
+                    .build();
+            benefitService.createBenefit(mondayDiscount);
+
+            // Thursday, Friday, Saturday and Sunday: 10% off using 100 points
+            BenefitRequestDTO weekendDiscount10 = BenefitRequestDTO.builder()
+                    .type(Benefit.BenefitType.DISCOUNT)
+                    .pointsRequired(100)
+                    .discountType(Benefit.DiscountType.PERCENTAGE)
+                    .discountValue(10.0)
+                    .applicableDays(Arrays.asList("THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"))
+                    .build();
+            benefitService.createBenefit(weekendDiscount10);
+
+            // Thursday and Friday: 20% off using 200 points
+            BenefitRequestDTO weekendDiscount20 = BenefitRequestDTO.builder()
+                    .type(Benefit.BenefitType.DISCOUNT)
+                    .pointsRequired(200)
+                    .discountType(Benefit.DiscountType.PERCENTAGE)
+                    .discountValue(20.0)
+                    .applicableDays(Arrays.asList("THURSDAY", "FRIDAY"))
+                    .build();
+            benefitService.createBenefit(weekendDiscount20);
+
+            // Monday and Tuesday: 30% off using 300 points
+            BenefitRequestDTO weekendDiscount30 = BenefitRequestDTO.builder()
+                    .type(Benefit.BenefitType.DISCOUNT)
+                    .pointsRequired(300)
+                    .discountType(Benefit.DiscountType.PERCENTAGE)
+                    .discountValue(30.0)
+                    .applicableDays(Arrays.asList("MONDAY", "TUESDAY"))
+                    .build();
+            benefitService.createBenefit(weekendDiscount30);
+
+            // Tuesday and Wednesday: $5000 off using 50 points
+            BenefitRequestDTO midweekDiscount = BenefitRequestDTO.builder()
+                    .type(Benefit.BenefitType.DISCOUNT)
+                    .pointsRequired(50)
+                    .discountType(Benefit.DiscountType.FIXED_AMOUNT)
+                    .discountValue(5000.0)
+                    .applicableDays(Arrays.asList("TUESDAY", "WEDNESDAY"))
+                    .build();
+            benefitService.createBenefit(midweekDiscount);
+
+            // Monday to Thursday: $1000 off using 1000 points
+            BenefitRequestDTO fixedDiscount1000 = BenefitRequestDTO.builder()
+                    .type(Benefit.BenefitType.DISCOUNT)
+                    .pointsRequired(1000)
+                    .discountType(Benefit.DiscountType.FIXED_AMOUNT)
+                    .discountValue(1000.0)
+                    .applicableDays(Arrays.asList("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY"))
+                    .build();
+            benefitService.createBenefit(fixedDiscount1000);
+
+            // Monday to Thursday: $2000 off using 2000 points
+            BenefitRequestDTO fixedDiscount2000 = BenefitRequestDTO.builder()
+                    .type(Benefit.BenefitType.DISCOUNT)
+                    .pointsRequired(2000)
+                    .discountType(Benefit.DiscountType.FIXED_AMOUNT)
+                    .discountValue(2000.0)
+                    .applicableDays(Arrays.asList("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY"))
+                    .build();
+            benefitService.createBenefit(fixedDiscount2000);
+
+            // Monday to Thursday: $3000 off using 3000 points
+            BenefitRequestDTO fixedDiscount3000 = BenefitRequestDTO.builder()
+                    .type(Benefit.BenefitType.DISCOUNT)
+                    .pointsRequired(3000)
+                    .discountType(Benefit.DiscountType.FIXED_AMOUNT)
+                    .discountValue(3000.0)
+                    .applicableDays(Arrays.asList("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY"))
+                    .build();
+            benefitService.createBenefit(fixedDiscount3000);
+
+            // Monday to Thursday: Free Tiramisu using 400 points
+            Product tiramisu = productRepository.findByName("Tiramisu").orElse(null);
+            if (tiramisu != null) {
+                BenefitRequestDTO freeTiramisu = BenefitRequestDTO.builder()
+                        .type(Benefit.BenefitType.FREE_PRODUCT)
+                        .pointsRequired(400)
+                        .applicableDays(Arrays.asList("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY"))
+                        .productIds(Arrays.asList(tiramisu.getProductId()))
+                        .build();
+                benefitService.createBenefit(freeTiramisu);
+            }
+
+            // All days: Free Margherita Pizza using 500 points
+            Product margheritaPizza = productRepository.findByName("Margherita Pizza").orElse(null);
+            if (margheritaPizza != null) {
+                BenefitRequestDTO freePizza = BenefitRequestDTO.builder()
+                        .type(Benefit.BenefitType.FREE_PRODUCT)
+                        .pointsRequired(500)
+                        .applicableDays(Arrays.asList("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"))
+                        .productIds(Arrays.asList(margheritaPizza.getProductId()))
+                        .build();
+                benefitService.createBenefit(freePizza);
+            }
+
+            // All days: Free Chinese Tea using 600 points
+            Product chineseTea = productRepository.findByName("Chinese Tea").orElse(null);
+            if (chineseTea != null) {
+                BenefitRequestDTO freeTea = BenefitRequestDTO.builder()
+                        .type(Benefit.BenefitType.FREE_PRODUCT)
+                        .pointsRequired(600)
+                        .applicableDays(Arrays.asList("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"))
+                        .productIds(Arrays.asList(chineseTea.getProductId()))
+                        .build();
+                benefitService.createBenefit(freeTea);
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error creating sample benefits: " + e.getMessage());
+        }
+    }
+
+
 }

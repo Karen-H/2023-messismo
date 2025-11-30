@@ -278,8 +278,16 @@ public class ManagerControllerTests {
     @Test
     public void testGetAllEmployees_Success() {
 
-        User user1 = new User("employee1", "employee1@example.com", "password");
-        User user2 = new User("employee2", "employee2@example.com", "password");
+        User user1 = User.builder()
+            .username("employee1")
+            .email("employee1@example.com")
+            .password("password")
+            .build();
+        User user2 = User.builder()
+            .username("employee2")
+            .email("employee2@example.com")
+            .password("password")
+            .build();
         List<UserDTO> mockUsersDTO = new ArrayList<>();
         List<User> mockUsers = Arrays.asList(user1, user2);
         for (User user : mockUsers) {
@@ -591,7 +599,6 @@ public class ManagerControllerTests {
         goalDTO.setEndingDate(endingDate);
         goalDTO.setObjectType("Category");
         goalDTO.setGoalObjective(500.0);
-        System.out.println("HOLA " + goalDTO);
         ResponseEntity<String> response = managerController.addGoal(goalDTO);
 
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());

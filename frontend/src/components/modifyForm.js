@@ -5,14 +5,17 @@ import { GrAddCircle } from "react-icons/gr";
 import { RiDeleteBinLine } from "react-icons/ri";
 import productsService from "../services/products.service";
 import ordersService from "../services/orders.service";
+import employeeService from "../services/employees.service";
+import clientService from "../services/client.service";
 import { useSelector } from "react-redux";
 import { propsToClassKey } from "@mui/styles";
 import EditOrderForm from "./EditOrderForm";
+import CloseOrderForm from "./CloseOrderForm";
 
 
 const Form = styled.form`
   padding: 2rem;
-  background-color: rgb(164, 212, 204, 0.6);
+  background-color: ${props => props.showCloseForm ? 'transparent' : 'rgb(164, 212, 204, 0.6)'};
 
   .fail {
     color: red;
@@ -221,7 +224,7 @@ const DetailsContent = styled.div`
         font-family: 'Roboto';
         font-size: 1.5rem;
     }
-    strong2{
+    strong{
         color: white;
         font-family: 'Roboto';
         font-size: 1.7rem;
@@ -256,7 +259,6 @@ const DetailsButton = styled.button`
     box-shadow: 0 3px #999;
     font-family: 'Roboto',serif;
     text-align: center;
-    margin-left: 1rem;
 
     &:hover{
         background-color: #a7d0cd;
@@ -286,7 +288,6 @@ const DetailsButtonCancel = styled.button`
     box-shadow: 0 3px #999;
     font-family: 'Roboto',serif;
     text-align: center;
-    margin-left: 1rem;
 
     &:hover{
         background-color: #a7d0cd;
@@ -323,36 +324,97 @@ const ModalContent = styled.div`
     overflow-y: auto;
 `;
 
+const ClientSelectContainer = styled.div`
+    margin: 1rem 0;
+    padding: 1rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
+`;
+
+const ClientLabel = styled.label`
+    color: white;
+    font-family: 'Roboto';
+    font-size: 1.2rem;
+    display: block;
+    margin-bottom: 0.5rem;
+`;
+
+const ClientSelect = styled.input`
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 1rem;
+    border: 1px solid #a4d4cc;
+    border-radius: 4px;
+    background-color: white;
+    font-family: 'Roboto';
+
+    &:focus {
+        outline: none;
+        border-color: #7cb9b0;
+    }
+`;
+
+const ErrorMessage = styled.div`
+    color: #ff6b6b;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    text-align: center;
+`;
+
 const ModifyForm = ({ onCancel, orderId, orderDetails, totalPrice }) => {
     const [closeOrderForm, setCloseOrderForm] = useState(false);
     const [isEditFormVisible, setIsEditFormVisible] = useState(false);
     const [formVisible, setFormVisible] = useState(true);
+    const [clients, setClients] = useState([]);
+    const [selectedClientId, setSelectedClientId] = useState("");
+    const [error, setError] = useState("");
 
+    useEffect(() => {
+        clientService.getAllClients()
+            .then((response) => {
+                setClients(response.data);
+            })
+            .catch((error) => {
+                console.error("Error al cargar clientes:", error);
+                setError("Error al cargar la lista de clientes");
+            });
+    }, []);
 
     const handleCloseOrderDetails = () => {
         setCloseOrderForm(true);
+        setError("");
     }
 
 const handleCloseDetails = () => {
     setCloseOrderForm(false);
+    setSelectedClientId("");
+    setError("");
 }
 
 const handleCloseOrder = () => {
-    const orderID = {
-        orderId: orderId
-    }
+    setError("");
 
-    ordersService.closeOrder(orderID)
+    const closeOrderData = {
+        orderId: orderId,
+        clientId: selectedClientId ? parseInt(selectedClientId) : null
+    };
+
+    ordersService.closeOrderWithClient(closeOrderData)
         .then(response => {
-          console.log("Orden cerrada con éxito:", response.data);
-          onCancel();
+            console.log("Orden cerrada exitosamente:", response.data);
+            setCloseOrderForm(false);
+            onCancel();
         })
         .catch(error => {
-          console.error("Error al cerrar la orden:", error);
+            console.error("Error al cerrar la orden:", error);
+            if (error.response && error.response.data && error.response.data.message) {
+                setError(error.response.data.message);
+            } else {
+                setError("Error al cerrar la orden. Inténtalo de nuevo.");
+            }
         });
-
-    setCloseOrderForm(false);
-    onCancel();
 }
 
     const handleAddProductsOrder = () => {
@@ -373,45 +435,28 @@ const handleCloseOrder = () => {
   return (
     <>
      {!isEditFormVisible && formVisible && (
-      <Form className="form-react">
-        <h1 style={{ fontSize: "1.7rem", marginBottom: "3%" }}>Order {orderId}</h1>
-        <Buttons>
-          <Button type="button" className="placeorder" onClick={handleAddProductsOrder}>
-            Add Products
-          </Button>
-          <Button type="button" className="cancel" onClick={handleCloseOrderDetails}>
-            Close Order
-          </Button>
-          <Button type="button" className="cancel" onClick={onCancel} style={{ marginTop: "20%" }}>
-            Cancel
-          </Button>
-        </Buttons>
-        
-        {closeOrderForm ? (
-               <Details>
-               <DetailsContent>
-                   {orderDetails.map(productOrder => (
-                           <div key={productOrder.productOrderId}>
-                               <strong>{productOrder.quantity}x {productOrder.productName}</strong><br />
-                               <strong>${productOrder.productUnitPrice} ea.</strong><br />
-                               <strong></strong><br />
-                           </div>
-                       ))}
-                    <strong2 style={{ color: "white" }}>Total price: ${totalPrice}</strong2>
-                    <div style={{ display: "flex", justifyContent: "speace-between" }}>
-                   <DetailsButton onClick={() => handleCloseOrder()}>
-                       Close Order
-                   </DetailsButton>
-                   <DetailsButtonCancel onClick={() => handleCloseDetails()}>
-                       Cancel
-                   </DetailsButtonCancel>
-               </div>
-               </DetailsContent>
-                     
-           </Details>
-
+      <Form className="form-react" showCloseForm={closeOrderForm}>
+        {!closeOrderForm ? (
+          <Buttons>
+            <Button type="button" className="placeorder" onClick={handleAddProductsOrder}>
+              Add Products
+            </Button>
+            <Button type="button" className="cancel" onClick={handleCloseOrderDetails}>
+              Close Order
+            </Button>
+            <Button type="button" className="cancel" onClick={onCancel} style={{ marginTop: "20%" }}>
+              Cancel
+            </Button>
+          </Buttons>
         ) : (
-            null
+          <CloseOrderForm 
+            orderId={orderId}
+            onCancel={handleCloseDetails}
+            onSuccess={() => {
+              // Cerrar completamente el modal y volver a Orders
+              onCancel();
+            }}
+          />
         )}
       </Form>
        )}

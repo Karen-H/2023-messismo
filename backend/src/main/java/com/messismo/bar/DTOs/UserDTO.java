@@ -19,4 +19,8 @@ public class UserDTO {
     private String email;
 
     private Role role;
+
+    private String clientId;
+
+    private Double currentPoints;
 }

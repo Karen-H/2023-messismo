@@ -97,6 +97,11 @@ public class ManagerController {
         return ResponseEntity.status(HttpStatus.OK).body(userService.getAllEmployees());
     }
 
+    @GetMapping("/getAllClients")
+    public ResponseEntity<?> getAllClients() {
+        return ResponseEntity.status(HttpStatus.OK).body(userService.getAllClients());
+    }
+
     @PutMapping("/validateEmployee")
     public ResponseEntity<String> validateEmployee(@RequestBody UserIdDTO userIdDTO) {
         if (userIdDTO.getUserId() == null) {

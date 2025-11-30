@@ -20,15 +20,28 @@ public class OrderService {
     private final UserRepository userRepository;
 
     private final ProductOrderRepository productOrderRepository;
+    
+    private final PointsService pointsService;
+    
+    private final BenefitService benefitService;
+    
+    private final BenefitRepository benefitRepository;
 
     public String addNewOrder(OrderRequestDTO orderRequestDTO) throws Exception {
         try {
             User employee = userRepository.findByEmail(orderRequestDTO.getRegisteredEmployeeEmail()).orElseThrow(() -> new UserNotFoundException("No user has that email"));
+            
+            // Validar clientId si se proporciona
+            if (orderRequestDTO.getClientId() != null) {
+                userRepository.findByClientId(String.valueOf(orderRequestDTO.getClientId()))
+                    .orElseThrow(() -> new ClientIdNotFoundException("Client ID " + orderRequestDTO.getClientId() + " not found"));
+            }
+            
             NewProductOrderListDTO newProductOrderListDTO = createProductOrder(orderRequestDTO.getProductOrders());
-            Order newOrder = new Order(employee, orderRequestDTO.getDateCreated(), newProductOrderListDTO.getProductOrderList(), newProductOrderListDTO.getTotalPrice(), newProductOrderListDTO.getTotalCost());
+            Order newOrder = new Order(employee, orderRequestDTO.getDateCreated(), newProductOrderListDTO.getProductOrderList(), newProductOrderListDTO.getTotalPrice(), newProductOrderListDTO.getTotalCost(), orderRequestDTO.getClientId());
             orderRepository.save(newOrder);
             return "Order created successfully";
-        } catch (UserNotFoundException | ProductQuantityBelowAvailableStock e) {
+        } catch (UserNotFoundException | ProductQuantityBelowAvailableStock | ClientIdNotFoundException e) {
             throw e;
         } catch (Exception e) {
             throw new Exception("CANNOT create an order at the moment");
@@ -45,6 +58,95 @@ public class OrderService {
             throw e;
         } catch (Exception e) {
             throw new Exception("CANNOT close an order at the moment");
+        }
+    }
+
+    public String closeOrderWithClient(CloseOrderDTO closeOrderDTO) throws Exception {
+        try {
+            Order order = orderRepository.findById(closeOrderDTO.getOrderId()).orElseThrow(() -> new OrderNotFoundException("Order not found"));
+            
+            // Validar clientId si se proporciona
+            User client = null;
+            if (closeOrderDTO.getClientId() != null) {
+                client = userRepository.findByClientId(String.valueOf(closeOrderDTO.getClientId()))
+                    .orElseThrow(() -> new ClientIdNotFoundException("Client ID " + closeOrderDTO.getClientId() + " not found"));
+                order.setClientId(closeOrderDTO.getClientId());
+            }
+            
+            // Aplicar beneficio si se proporciona y es válido
+            Benefit appliedBenefit = null;
+            double originalTotalPrice = order.getTotalPrice();
+            double finalTotalPrice = originalTotalPrice;
+            int pointsToUse = 0;
+            
+            if (closeOrderDTO.getBenefitId() != null && client != null) {
+                appliedBenefit = benefitRepository.findById(closeOrderDTO.getBenefitId())
+                    .orElseThrow(() -> new RuntimeException("Benefit not found"));
+                
+                // Validar que el cliente tenga suficientes puntos
+                Double clientPoints = pointsService.getPointsAccount(String.valueOf(client.getClientId()))
+                    .map(account -> account.getCurrentBalance())
+                    .orElse(0.0);
+                    
+                if (clientPoints < appliedBenefit.getPointsRequired()) {
+                    throw new RuntimeException("Insufficient points for this benefit");
+                }
+                
+                // Validar que el beneficio aplique para el día actual
+                String currentDay = java.time.LocalDate.now().getDayOfWeek().name();
+                if (!appliedBenefit.isApplicableOnDay(currentDay)) {
+                    throw new RuntimeException("This benefit is not available today");
+                }
+                
+                // Validar beneficios de producto gratis
+                if (appliedBenefit.getType() == Benefit.BenefitType.FREE_PRODUCT) {
+                    if (!validateFreeProductBenefit(order, appliedBenefit)) {
+                        throw new RuntimeException("This order does not contain the required product for this benefit");
+                    }
+                }
+                
+                // Calcular descuento según tipo de beneficio
+                finalTotalPrice = calculateDiscountedPrice(order, appliedBenefit);
+                pointsToUse = appliedBenefit.getPointsRequired();
+                
+                order.setAppliedBenefit(appliedBenefit);
+                order.setPointsUsed(pointsToUse);
+                
+                // Actualizar total de la orden
+                order.setTotalPrice(finalTotalPrice);
+            }
+            
+            order.close();
+            Order savedOrder = orderRepository.save(order);
+            
+            // Calcular y asignar puntos ganados (basado en el precio final)
+            if (savedOrder.getClientId() != null) {
+                Double pointsEarned = pointsService.addPointsForOrder(
+                    String.valueOf(savedOrder.getClientId()), 
+                    savedOrder.getTotalPrice(), 
+                    savedOrder.getId()
+                );
+                savedOrder.setPointsEarned(pointsEarned);
+                
+                // Descontar puntos usados del beneficio
+                if (pointsToUse > 0) {
+                    pointsService.usePointsForBenefit(
+                        String.valueOf(savedOrder.getClientId()),
+                        pointsToUse
+                    );
+                }
+                
+                orderRepository.save(savedOrder);
+            }
+            
+            return "Order closed successfully";
+        } catch (OrderNotFoundException | ClientIdNotFoundException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            // Para RuntimeExceptions (como validación de productos), mantener el mensaje original
+            throw new Exception(e.getMessage());
+        } catch (Exception e) {
+            throw new Exception("CANNOT close an order at the moment: " + e.getMessage());
         }
     }
 
@@ -98,5 +200,118 @@ public class OrderService {
             }
         }
         return NewProductOrderListDTO.builder().productOrderList(productOrderList).totalCost(totalCost).totalPrice(totalPrice).build();
+    }
+
+    public List<Order> getOrdersByClientEmail(String email) throws Exception {
+        try {
+            // Obtener el usuario por email
+            User client = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Client not found"));
+            
+            // Obtener órdenes por clientId
+            return orderRepository.findByClientId(Long.parseLong(client.getClientId()));
+        } catch (Exception e) {
+            throw new Exception("Error retrieving client orders: " + e.getMessage());
+        }
+    }
+    
+    private double calculateDiscountedPrice(Order order, Benefit benefit) {
+        double originalPrice = order.getTotalPrice();
+        
+        switch (benefit.getType()) {
+            case DISCOUNT:
+                return calculateDiscountAmount(originalPrice, benefit);
+            case FREE_PRODUCT:
+                return calculateFreeProductDiscount(order, benefit);
+            default:
+                return originalPrice;
+        }
+    }
+    
+    private double calculateDiscountAmount(double originalPrice, Benefit benefit) {
+        switch (benefit.getDiscountType()) {
+            case PERCENTAGE:
+                double discountAmount = originalPrice * (benefit.getDiscountValue() / 100.0);
+                return Math.max(0, originalPrice - discountAmount);
+            case FIXED_AMOUNT:
+                return Math.max(0, originalPrice - benefit.getDiscountValue());
+            default:
+                return originalPrice;
+        }
+    }
+    
+    private double calculateFreeProductDiscount(Order order, Benefit benefit) {
+        double originalPrice = order.getTotalPrice();
+        
+        try {
+            // Obtener la lista de product IDs del beneficio
+            List<Long> productIds = jsonToLongList(benefit.getProductIds());
+            if (productIds.isEmpty()) {
+                return originalPrice;
+            }
+            
+            // Obtener el primer producto del beneficio
+            Long benefitProductId = productIds.get(0);
+            Product benefitProduct = productRepository.findById(benefitProductId).orElse(null);
+            
+            if (benefitProduct == null) {
+                return originalPrice;
+            }
+            
+            // Buscar el producto en la orden por nombre
+            for (ProductOrder productOrder : order.getProductOrders()) {
+                if (productOrder.getProductName().equals(benefitProduct.getName())) {
+                    // Descontar el precio de UNA unidad del producto
+                    double productPrice = productOrder.getProductUnitPrice();
+                    return Math.max(0, originalPrice - productPrice);
+                }
+            }
+        } catch (Exception e) {
+            // Si hay algún error, no aplicar descuento
+            return originalPrice;
+        }
+        
+        // Si el producto no está en la orden, no aplicar descuento
+        return originalPrice;
+    }
+    
+    // Validar si la orden contiene el producto requerido para el beneficio
+    private boolean validateFreeProductBenefit(Order order, Benefit benefit) {
+        try {
+            List<Long> productIds = jsonToLongList(benefit.getProductIds());
+            if (productIds.isEmpty()) {
+                return false;
+            }
+            
+            // Obtener el primer producto del beneficio
+            Long benefitProductId = productIds.get(0);
+            Product benefitProduct = productRepository.findById(benefitProductId).orElse(null);
+            
+            if (benefitProduct == null) {
+                return false;
+            }
+            
+            // Verificar si la orden contiene el producto
+            for (ProductOrder productOrder : order.getProductOrders()) {
+                if (productOrder.getProductName().equals(benefitProduct.getName())) {
+                    return true;
+                }
+            }
+            
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // Helper method para convertir JSON a List<Long>
+    private List<Long> jsonToLongList(String json) {
+        if (json == null || json.isEmpty()) return List.of();
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            return mapper.readValue(json, new com.fasterxml.jackson.core.type.TypeReference<List<Long>>() {});
+        } catch (Exception e) {
+            return List.of();
+        }
     }
 }

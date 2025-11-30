@@ -43,6 +43,18 @@ public class Order {
     private Double totalCost;
     @Column(name = "status")
     private String status;
+    @Column(name = "client_id")
+    private Long clientId;
+    
+    @Column(name = "points_earned")
+    private Double pointsEarned;
+    
+    @Column(name = "points_used")
+    private Integer pointsUsed = 0;
+    
+    @ManyToOne
+    @JoinColumn(name = "applied_benefit_id", referencedColumnName = "id")
+    private Benefit appliedBenefit;
 
     @Override
     public String toString() {
@@ -62,6 +74,24 @@ public class Order {
             this.totalPrice= totalPrice;
             this.totalCost=totalCost;
             this.status="Open";
+            this.clientId = null;
+        }
+    }
+
+    public Order(User user, Date dateCreated, List<ProductOrder> productOrders, Double totalPrice, Double totalCost, Long clientId){
+        if(totalPrice<0.00){
+            throw new IllegalArgumentException("Total price must be greater than 0");
+        } else if (totalCost<0.00) {
+            throw new IllegalArgumentException("Total cost must be greater than 0");
+        }
+        else {
+            this.user = user;
+            this.dateCreated = dateCreated;
+            this.productOrders = productOrders;
+            this.totalPrice= totalPrice;
+            this.totalCost=totalCost;
+            this.status="Open";
+            this.clientId = clientId;
         }
     }
 
