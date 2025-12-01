@@ -7,6 +7,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { Box, Typography } from '@mui/material';
 import { DataGrid } from "@mui/x-data-grid";
 import moment from "moment";
+import apiUrl from "../deploy";
 
 const Container = styled.div`
   display: flex;
@@ -160,7 +161,7 @@ const Settings = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:8080/settings/points-conversion", {
+      const response = await fetch(`${apiUrl}/settings/points-conversion`, {
         headers: {
           "Authorization": "Bearer " + currentUser.access_token,
           "Content-Type": "application/json"
@@ -198,7 +199,7 @@ const Settings = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:8080/settings/points_conversion_rate/history", {
+      const response = await fetch(`${apiUrl}/settings/points_conversion_rate/history`, {
         headers: {
           "Authorization": "Bearer " + currentUser.access_token,
           "Content-Type": "application/json"
@@ -226,7 +227,7 @@ const Settings = () => {
     setMessage(null);
 
     try {
-      const response = await fetch("http://localhost:8080/settings/points-conversion", {
+      const response = await fetch(`${apiUrl}/settings/points-conversion`, {
         method: 'PUT',
         headers: {
           "Authorization": "Bearer " + currentUser.access_token,

@@ -13,6 +13,7 @@ import { MdFastfood } from "react-icons/md";
 import moment from "moment";
 import EditIcon from "@mui/icons-material/Edit";
 import EditOrderForm from "../components/EditOrderForm";
+import apiUrl from "../deploy";
 import ModifyForm from "../components/modifyForm";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import Fab from "@mui/material/Fab";
@@ -257,7 +258,7 @@ function Orders() {
       });
 
     // Load current conversion rate
-    fetch("http://localhost:8080/settings/points-conversion", {
+    fetch(`${apiUrl}/settings/points-conversion`, {
       headers: {
         "Authorization": "Bearer " + currentUser.access_token,
         "Content-Type": "application/json"

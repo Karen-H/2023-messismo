@@ -13,6 +13,7 @@ import { MdFastfood } from "react-icons/md";
 import moment from "moment";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import CircularProgress from "@mui/material/CircularProgress";
+import apiUrl from "../deploy";
 
 const Container = styled.div``;
 
@@ -175,7 +176,7 @@ function MyOrders() {
       });
 
     // Load current conversion rate
-    fetch("http://localhost:8080/settings/points-conversion", {
+    fetch(`${apiUrl}/settings/points-conversion`, {
       headers: {
         "Authorization": "Bearer " + currentUser.access_token,
         "Content-Type": "application/json"
