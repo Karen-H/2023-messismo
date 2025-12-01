@@ -4,6 +4,6 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "./mvnw spring-boot:run"
+    "startCommand": "java -jar target/*.jar"
   }
 }
