@@ -26,6 +26,12 @@ public class InitialConfiguration {
     @Bean
     public CommandLineRunner commandLineRunner(AuthenticationService authenticationService, UserRepository userRepository, ProductService productService, CategoryService categoryService, OrderService orderService, OrderRepository orderRepository, ProductRepository productRepository, GoalService goalService, PointsService pointsService, BenefitService benefitService) {
         return args -> {
+            // Solo ejecutar si la base de datos está vacía
+            if (userRepository.count() > 0) {
+                System.out.println("Database already initialized. Skipping initial data load.");
+                return;
+            }
+            
             RegisterRequestDTO admin = new RegisterRequestDTO();
             admin.setUsername("admin");
             admin.setEmail("admin@mail.com");
