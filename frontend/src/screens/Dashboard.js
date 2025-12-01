@@ -704,13 +704,7 @@ function Dashboard() {
                     max={20}
                     value={sliderValue}
                     onChange={handleSliderChange}
-                    classes={{
-                      root: classes.slider,
-                      thumb: classes.slider,
-                      active: classes.slider,
-                      track: classes.slider,
-                      rail: classes.slider,
-                    }}
+                    sx={{ color: "#a4d4cc" }}
                   />
                   <p style={{ color: "white", marginBottom: "2rem" }}>
                     Products with {sliderValue} or less units
